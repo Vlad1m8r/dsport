@@ -1,15 +1,32 @@
 package ru.weu.dsport.controller;
 
-import java.util.Map;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.weu.dsport.dto.GreetingResponse;
 
 @RestController
+@Tag(name = "Greeting", description = "Endpoints for greeting visitors of the service.")
 public class HelloController {
 
     @GetMapping("/hello")
-    public ResponseEntity<Map<String, String>> getGreeting() {
-        return ResponseEntity.ok(Map.of("message", "Привет, мир!"));
+    @Operation(
+            summary = "Get localized greeting",
+            description = "Returns a localized greeting message to confirm the service is available.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Greeting returned successfully.",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = GreetingResponse.class)))
+            })
+    public ResponseEntity<GreetingResponse> getGreeting() {
+        return ResponseEntity.ok(new GreetingResponse("Привет, мир!"));
     }
 }
