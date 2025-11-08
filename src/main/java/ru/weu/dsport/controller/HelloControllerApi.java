@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import ru.weu.dsport.dto.GreetingResponse;
+import ru.weu.dsport.dto.WorkoutResponse;
 
 import java.util.List;
 
@@ -32,15 +33,15 @@ public interface HelloControllerApi {
 
     @GetMapping("/data")
     @Operation(
-            summary = "Get sample data array",
-            description = "Returns a sample array of data objects for demonstration purposes.",
+            summary = "Get mock workouts",
+            description = "Returns a mock list of workouts with names, dates, and exercises.",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Array returned successfully.",
+                            description = "Workouts returned successfully.",
                             content = @Content(
                                     mediaType = "application/json",
-                                    array = @ArraySchema(schema = @Schema(implementation = String.class))))
+                                    array = @ArraySchema(schema = @Schema(implementation = WorkoutResponse.class))))
             })
-    ResponseEntity<List<String>> getSampleData();
+    ResponseEntity<List<WorkoutResponse>> getSampleData();
 }
