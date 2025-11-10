@@ -9,8 +9,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:none}
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    default-schema: ${SPRING_FLYWAY_DEFAULT_SCHEMA:dsport}
+    schemas: ${SPRING_FLYWAY_SCHEMAS:dsport}
+    locations: classpath:db/migration
+
 server:
   port: ${SERVER_PORT:8080}
