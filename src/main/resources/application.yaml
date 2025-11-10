@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: dsport
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:dsport}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USER:dsport}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:dsport}}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:none}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+server:
+  port: ${SERVER_PORT:8080}
