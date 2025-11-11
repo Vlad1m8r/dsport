@@ -6,31 +6,117 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
+
 name: Java CI with Maven
 
 on:
-  push:
-    branches: [ "master", "codex/*" ]
+#  push:
+#    branches: [ "master", "codex/*" ]
   pull_request:
     branches: [ "master", "codex/*" ]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    # ВАЖНО: имя должно совпадать с именем Environment, где лежит secret N8N_WEBHOOK_URL
+    environment: N8N_WEBHOOK_URL
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        cache: maven
-    - name: Run tests
-      run: ./mvnw -B test
-    - name: Build with Maven
-      run: ./mvnw -B package --file pom.xml
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run tests
+        run: ./mvnw -B test
+
+      - name: Build with Maven
+        run: ./mvnw -B package --file pom.xml
+
+      # Краткая сводка тестов из surefire-reports (необязательно, но полезно)
+      - name: Collect test summary
+        if: always()
+        id: tests
+        run: |
+          # Суммируем метрики из всех surefire xml (если их нет — вернём нули)
+          if ls target/surefire-reports/*.xml >/dev/null 2>&1; then
+            awk -F\" '
+              /<testsuite/ {
+                for(i=1;i<=NF;i++){
+                  if($i=="tests") t+=$(i+1);
+                  if($i=="failures") f+=$(i+1);
+                  if($i=="errors") e+=$(i+1);
+                  if($i=="skipped") s+=$(i+1);
+                }
+              }
+              END {
+                printf "total=%d\nfailures=%d\nerrors=%d\nskipped=%d\n", t+0, f+0, e+0, s+0
+              }
+            ' target/surefire-reports/*.xml >> $GITHUB_OUTPUT
+          else
+            echo "total=0"   >> $GITHUB_OUTPUT
+            echo "failures=0" >> $GITHUB_OUTPUT
+            echo "errors=0"   >> $GITHUB_OUTPUT
+            echo "skipped=0"  >> $GITHUB_OUTPUT
+          fi
+
+      # Уведомление в n8n. Сработает всегда, но пропустит PR из форков (там секреты недоступны).
+      - name: Notify n8n
+        if: ${{ always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) }}
+        env:
+          N8N_WEBHOOK_URL: ${{ secrets.N8N_WEBHOOK_URL }}
+        run: |
+          if [ -z "$N8N_WEBHOOK_URL" ] || ! echo "$N8N_WEBHOOK_URL" | grep -Eq '^https?://'; then
+            echo "N8N_WEBHOOK_URL is not set or invalid. Skipping notify."
+            exit 0
+          fi
+
+          STATUS="${{ job.status }}"
+          REPO="${{ github.repository }}"
+          RUN_ID="${{ github.run_id }}"
+          RUN_URL="https://github.com/${REPO}/actions/runs/${RUN_ID}"
+          SHA="${{ github.sha }}"
+          SHORT_SHA=$(echo "$SHA" | cut -c1-8)
+          REF="${{ github.ref }}"
+          ACTOR="${{ github.actor }}"
+          EVENT="${{ github.event_name }}"
+          WORKFLOW="${{ github.workflow }}"
+
+          TOTAL="${{ steps.tests.outputs.total }}"
+          FAILS="${{ steps.tests.outputs.failures }}"
+          ERRORS="${{ steps.tests.outputs.errors }}"
+          SKIPPED="${{ steps.tests.outputs.skipped }}"
+
+          jq -n \
+            --arg status "$STATUS" \
+            --arg repo "$REPO" \
+            --arg run_url "$RUN_URL" \
+            --arg sha "$SHORT_SHA" \
+            --arg ref "$REF" \
+            --arg actor "$ACTOR" \
+            --arg event "$EVENT" \
+            --arg workflow "$WORKFLOW" \
+            --arg total "${TOTAL:-0}" \
+            --arg failures "${FAILS:-0}" \
+            --arg errors "${ERRORS:-0}" \
+            --arg skipped "${SKIPPED:-0}" \
+            '{
+               status: $status,
+               repository: $repo,
+               runUrl: $run_url,
+               sha: $sha,
+               ref: $ref,
+               actor: $actor,
+               event: $event,
+               workflow: $workflow,
+               tests: { total: ($total|tonumber), failures: ($failures|tonumber), errors: ($errors|tonumber), skipped: ($skipped|tonumber) }
+             }' \
+          | curl -sS -X POST -H "Content-Type: application/json" -d @- "$N8N_WEBHOOK_URL" || true
+
 
 #    # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
 #    - name: Update dependency graph
