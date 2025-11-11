@@ -11,3 +11,5 @@ These guidelines apply to the entire repository unless a nested `AGENTS.md` over
 - Run `./mvnw test` before finishing substantial changes and include the command in your final report when executed.
 - Document notable behavior changes in your summary and note any required follow-up work.
 - Ensure every HTTP endpoint, controller method, and related DTO is documented with OpenAPI annotations (e.g., `@Operation`, `@ApiResponse`, `@Schema`) so the generated specification stays accurate.
+- Используйте Lombok там, где это оправдано и помогает сократить шаблонный код.
+- Отдавайте предпочтение модульным тестам; интеграционные тесты добавляйте только при острой необходимости.
