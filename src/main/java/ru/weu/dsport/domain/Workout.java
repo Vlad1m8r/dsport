@@ -12,9 +12,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import ru.weu.dsport.domain.common.BaseEntity;
 import ru.weu.dsport.domain.enums.WorkoutStatus;
@@ -23,18 +24,21 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true, exclude = {"user", "workoutExercises"})
-@ToString(exclude = {"user", "workoutExercises"})
+@EqualsAndHashCode(callSuper = true)
+@ToString
 @Entity
 @Table(name = "workouts")
 public class Workout extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private User user;
 
     private String name;
@@ -49,5 +53,7 @@ public class Workout extends BaseEntity {
     private WorkoutStatus status;
 
     @OneToMany(mappedBy = "workout", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<WorkoutExercise> workoutExercises = new ArrayList<>();
 }

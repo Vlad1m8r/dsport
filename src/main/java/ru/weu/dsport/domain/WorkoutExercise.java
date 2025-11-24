@@ -10,31 +10,37 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import ru.weu.dsport.domain.common.BaseEntity;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true, exclude = {"workout", "exercise", "workoutSets"})
-@ToString(exclude = {"workout", "exercise", "workoutSets"})
+@EqualsAndHashCode(callSuper = true)
+@ToString
 @Entity
 @Table(name = "workout_exercises")
 public class WorkoutExercise extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workout_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Workout workout;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exercise_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Exercise exercise;
 
     @Column(name = "order_index", nullable = false)
@@ -43,6 +49,8 @@ public class WorkoutExercise extends BaseEntity {
     private String notes;
 
     @OneToMany(mappedBy = "workoutExercise", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<WorkoutSet> workoutSets = new ArrayList<>();
 
 }
