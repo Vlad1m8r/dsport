@@ -1,22 +1,7 @@
 package ru.weu.dsport.domain;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import jakarta.persistence.*;
+import lombok.*;
 import ru.weu.dsport.domain.common.BaseEntity;
 import ru.weu.dsport.domain.enums.WorkoutStatus;
 
@@ -30,15 +15,14 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@ToString
+@ToString(callSuper = true)
 @Entity
 @Table(name = "workouts")
 public class Workout extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id")
     @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     private User user;
 
     private String name;
@@ -52,8 +36,7 @@ public class Workout extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private WorkoutStatus status;
 
+    @Builder.Default
     @OneToMany(mappedBy = "workout", cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     private List<WorkoutExercise> workoutExercises = new ArrayList<>();
 }

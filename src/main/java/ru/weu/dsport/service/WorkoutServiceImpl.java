@@ -4,11 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.weu.dsport.domain.*;
-import ru.weu.dsport.dto.WorkoutDto;
-import ru.weu.dsport.exception.AccessDeniedException;
 import ru.weu.dsport.exception.ResourceNotFoundException;
-import ru.weu.dsport.mapper.WorkoutMapper;
-import ru.weu.dsport.repository.*;
+import ru.weu.dsport.repository.ExerciseRepository;
+import ru.weu.dsport.repository.WorkoutRepository;
+import ru.weu.dsport.service.iface.WorkoutService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,76 +17,65 @@ import java.util.List;
 public class WorkoutServiceImpl implements WorkoutService {
 
     private final WorkoutRepository workoutRepository;
-    private final UserRepository userRepository;
     private final ExerciseRepository exerciseRepository;
-    private final WorkoutExerciseRepository workoutExerciseRepository;
-    private final WorkoutSetRepository workoutSetRepository;
-    private final WorkoutMapper workoutMapper;
 
     @Override
     @Transactional
-    public WorkoutDto startWorkout(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+    public Workout createWorkout(User user) {
         Workout workout = new Workout();
         workout.setUser(user);
-        workout.setStartDt(LocalDateTime.now());
-        return workoutMapper.toDto(workoutRepository.save(workout));
+        workout.setStartedAt(LocalDateTime.now());
+        return workoutRepository.save(workout);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<WorkoutDto> getAllWorkouts(Long userId) {
-        return workoutRepository.findByUserId(userId).stream()
-                .map(workoutMapper::toDto)
-                .toList();
+    public Workout getWorkout(Long id) {
+        return workoutRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Workout not found with id: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public WorkoutDto getWorkout(Long workoutId, Long userId) {
-        Workout workout = workoutRepository.findById(workoutId)
-                .orElseThrow(() -> new ResourceNotFoundException("Workout not found with id: " + workoutId));
-        if (!workout.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException("User does not have access to this workout");
-        }
-        return workoutMapper.toDto(workout);
+    public List<Workout> getWorkouts(Long userId) {
+        return workoutRepository.findByUserId(userId);
     }
 
     @Override
     @Transactional
-    public WorkoutDto addExerciseToWorkout(Long workoutId, Long exerciseId, Long userId) {
-        Workout workout = workoutRepository.findById(workoutId)
-                .orElseThrow(() -> new ResourceNotFoundException("Workout not found with id: " + workoutId));
-        if (!workout.getUser().getId().equals(userId)) {
-            throw new AccessDeniedException("User does not have access to this workout");
-        }
+    public Workout finishWorkout(Long id) {
+        Workout workout = getWorkout(id);
+        workout.setEndedAt(LocalDateTime.now());
+        return workoutRepository.save(workout);
+    }
+
+    @Override
+    @Transactional
+    public WorkoutExercise addExerciseToWorkout(Long workoutId, Long exerciseId) {
+        Workout workout = getWorkout(workoutId);
         Exercise exercise = exerciseRepository.findById(exerciseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exercise not found with id: " + exerciseId));
 
         WorkoutExercise workoutExercise = new WorkoutExercise();
         workoutExercise.setWorkout(workout);
         workoutExercise.setExercise(exercise);
-        workoutExerciseRepository.save(workoutExercise);
 
-        return workoutMapper.toDto(workoutRepository.findById(workoutId).get()); // Re-fetch to get all associations
+        workout.getWorkoutExercises().add(workoutExercise);
+        return workoutExercise;
     }
 
     @Override
     @Transactional
-    public WorkoutDto addSetToWorkoutExercise(Long workoutExerciseId, Double weight, Integer reps, Long userId) {
-        WorkoutExercise workoutExercise = workoutExerciseRepository.findById(workoutExerciseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Workout exercise not found with id: " + workoutExerciseId));
-        if (!workoutExercise.getWorkout().getUser().getId().equals(userId)) {
-            throw new AccessDeniedException("User does not have access to this workout exercise");
-        }
+    public WorkoutSet addSetToWorkoutExercise(Long workoutExerciseId, Double weight, Integer reps) {
+        WorkoutExercise workoutExercise = workoutRepository.findWorkoutExerciseById(workoutExerciseId)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkoutExercise not found with id: " + workoutExerciseId));
 
         WorkoutSet workoutSet = new WorkoutSet();
         workoutSet.setWorkoutExercise(workoutExercise);
         workoutSet.setWeight(weight);
-        workoutSet.setReps(reps);
-        workoutSetRepository.save(workoutSet);
+        workoutSet.setRepetitions(reps);
 
-        return workoutMapper.toDto(workoutRepository.findById(workoutExercise.getWorkout().getId()).get()); // Re-fetch to get all associations
+        workoutExercise.getWorkoutSets().add(workoutSet);
+        return workoutSet;
     }
 }

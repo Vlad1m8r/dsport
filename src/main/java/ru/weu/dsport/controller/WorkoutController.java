@@ -1,78 +1,81 @@
 package ru.weu.dsport.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.weu.dsport.domain.User;
+import ru.weu.dsport.domain.Workout;
+import ru.weu.dsport.domain.WorkoutExercise;
+import ru.weu.dsport.domain.WorkoutSet;
 import ru.weu.dsport.dto.WorkoutDto;
+import ru.weu.dsport.dto.WorkoutExerciseDto;
+import ru.weu.dsport.dto.WorkoutSetDto;
 import ru.weu.dsport.dto.request.AddExerciseRequest;
 import ru.weu.dsport.dto.request.AddSetRequest;
-import ru.weu.dsport.dto.request.CreateWorkoutRequest;
-import ru.weu.dsport.service.WorkoutService;
+import ru.weu.dsport.mapper.WorkoutExerciseMapper;
+import ru.weu.dsport.mapper.WorkoutMapper;
+import ru.weu.dsport.mapper.WorkoutSetMapper;
+import ru.weu.dsport.service.iface.UserService;
+import ru.weu.dsport.service.iface.WorkoutService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/workouts")
 @RequiredArgsConstructor
-@Tag(name = "Workouts", description = "Workout management APIs")
+@RequestMapping("/api/workouts")
 public class WorkoutController {
 
     private final WorkoutService workoutService;
+    private final UserService userService;
+    private final WorkoutMapper workoutMapper;
+    private final WorkoutExerciseMapper workoutExerciseMapper;
+    private final WorkoutSetMapper workoutSetMapper;
 
     @PostMapping
-    @Operation(summary = "Start a new workout session")
-    @ApiResponse(responseCode = "200", description = "Workout created successfully",
-            content = @Content(schema = @Schema(implementation = WorkoutDto.class)))
-    public ResponseEntity<WorkoutDto> startWorkout(
-            @Parameter(hidden = true) @RequestHeader("X-Telegram-User-Id") Long userId,
-            @RequestBody @Valid CreateWorkoutRequest request) {
-        return ResponseEntity.ok(workoutService.startWorkout(userId));
+    public ResponseEntity<WorkoutDto> createWorkout(@RequestAttribute("userId") Long userId) {
+        User user = userService.getUser(userId);
+        Workout workout = workoutService.createWorkout(user);
+        return ResponseEntity.ok(workoutMapper.toDto(workout));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<WorkoutDto> getWorkout(@PathVariable Long id) {
+        Workout workout = workoutService.getWorkout(id);
+        return ResponseEntity.ok(workoutMapper.toDto(workout));
     }
 
     @GetMapping
-    @Operation(summary = "Get all workouts for the current user")
-    public ResponseEntity<List<WorkoutDto>> getAllWorkouts(
-            @Parameter(hidden = true) @RequestHeader("X-Telegram-User-Id") Long userId) {
-        return ResponseEntity.ok(workoutService.getAllWorkouts(userId));
+    public ResponseEntity<List<WorkoutDto>> getWorkouts(@RequestAttribute("userId") Long userId) {
+        List<Workout> workouts = workoutService.getWorkouts(userId);
+        return ResponseEntity.ok(workoutMapper.toDto(workouts));
     }
 
-    @GetMapping("/{workoutId}")
-    @Operation(summary = "Get a specific workout by its ID")
-    @ApiResponse(responseCode = "200", description = "Successful operation",
-            content = @Content(schema = @Schema(implementation = WorkoutDto.class)))
-    @ApiResponse(responseCode = "404", description = "Workout not found")
-    public ResponseEntity<WorkoutDto> getWorkout(
-            @Parameter(hidden = true) @RequestHeader("X-Telegram-User-Id") Long userId,
-            @PathVariable Long workoutId) {
-        return ResponseEntity.ok(workoutService.getWorkout(workoutId, userId));
+    @PostMapping("/{id}/finish")
+    public ResponseEntity<WorkoutDto> finishWorkout(@PathVariable Long id) {
+        Workout workout = workoutService.finishWorkout(id);
+        return ResponseEntity.ok(workoutMapper.toDto(workout));
     }
 
     @PostMapping("/{workoutId}/exercises")
-    @Operation(summary = "Add an exercise to a workout")
-    @ApiResponse(responseCode = "200", description = "Exercise added successfully",
-            content = @Content(schema = @Schema(implementation = WorkoutDto.class)))
-    public ResponseEntity<WorkoutDto> addExerciseToWorkout(
-            @Parameter(hidden = true) @RequestHeader("X-Telegram-User-Id") Long userId,
+    public ResponseEntity<WorkoutExerciseDto> addExerciseToWorkout(
             @PathVariable Long workoutId,
-            @RequestBody @Valid AddExerciseRequest request) {
-        return ResponseEntity.ok(workoutService.addExerciseToWorkout(workoutId, request.getExerciseId(), userId));
+            @Valid @RequestBody AddExerciseRequest request
+    ) {
+        WorkoutExercise workoutExercise = workoutService.addExerciseToWorkout(workoutId, request.getExerciseId());
+        return ResponseEntity.ok(workoutExerciseMapper.toDto(workoutExercise));
     }
 
     @PostMapping("/exercises/{workoutExerciseId}/sets")
-    @Operation(summary = "Add a set to a workout exercise")
-    @ApiResponse(responseCode = "200", description = "Set added successfully",
-            content = @Content(schema = @Schema(implementation = WorkoutDto.class)))
-    public ResponseEntity<WorkoutDto> addSetToWorkoutExercise(
-            @Parameter(hidden = true) @RequestHeader("X-Telegram-User-Id") Long userId,
+    public ResponseEntity<WorkoutSetDto> addSetToWorkoutExercise(
             @PathVariable Long workoutExerciseId,
-            @RequestBody @Valid AddSetRequest request) {
-        return ResponseEntity.ok(workoutService.addSetToWorkoutExercise(workoutExerciseId, request.getWeight(), request.getReps(), userId));
+            @Valid @RequestBody AddSetRequest request
+    ) {
+        WorkoutSet workoutSet = workoutService.addSetToWorkoutExercise(
+                workoutExerciseId,
+                request.getWeight(),
+                request.getRepetitions()
+        );
+        return ResponseEntity.ok(workoutSetMapper.toDto(workoutSet));
     }
 }
