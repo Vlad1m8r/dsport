@@ -13,3 +13,37 @@ These guidelines apply to the entire repository unless a nested `AGENTS.md` over
 - Ensure every HTTP endpoint, controller method, and related DTO is documented with OpenAPI annotations (e.g., `@Operation`, `@ApiResponse`, `@Schema`) so the generated specification stays accurate.
 - Используйте Lombok там, где это оправдано и помогает сократить шаблонный код.
 - Отдавайте предпочтение модульным тестам; интеграционные тесты добавляйте только при острой необходимости.
+
+## Tech Stack (fixed)
+- Java: 21
+- Spring Boot: 3.x
+- DB: PostgreSQL 16+
+- Migrations: Flyway
+- OpenAPI: springdoc-openapi
+- Build: Maven Wrapper (./mvnw)
+
+## Project Structure (preferred)
+- controller/  (REST endpoints)
+- dto/         (request/response)
+- service/     (use-cases, business logic)
+- repository/  (JPA repositories)
+- domain/      (entities/value objects)
+- mapper/      (MapStruct or manual mappers)
+- exception/   (custom exceptions + handler)
+- config/      (security, openapi, etc.)
+
+## Database & Migrations (Flyway)
+- Any schema change MUST be done via Flyway migration (no manual DB edits).
+- Migration naming: VYYYYMMDD_HHMM__short_description.sql
+- Migrations are append-only; never edit already applied migrations.
+
+## API Conventions
+- JSON: camelCase
+- Use Bean Validation on request DTOs.
+- Provide consistent error format via @ControllerAdvice (e.g., {timestamp, path, code, message, details}).
+- Pagination/sorting: Spring Pageable where relevant.
+
+## Logging
+- Use SLF4J (log.info/debug/warn/error).
+- Do not log secrets/tokens or personal data.
+
