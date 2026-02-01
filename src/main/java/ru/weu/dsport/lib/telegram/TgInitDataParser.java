@@ -3,10 +3,12 @@ package ru.weu.dsport.lib.telegram;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.util.UriUtils;
 import ru.weu.dsport.exception.InvalidInitDataException;
 
 @Component
@@ -30,6 +32,7 @@ public class TgInitDataParser {
         }
 
         try {
+            userJson = UriUtils.decode(userJson, StandardCharsets.UTF_8);
             // TODO: add Telegram initData signature validation when security layer is introduced.
             JsonNode root = objectMapper.readTree(userJson);
             JsonNode idNode = root.get("id");
