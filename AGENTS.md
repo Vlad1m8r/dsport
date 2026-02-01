@@ -47,3 +47,5 @@ These guidelines apply to the entire repository unless a nested `AGENTS.md` over
 - Use SLF4J (log.info/debug/warn/error).
 - Do not log secrets/tokens or personal data.
 
+## Контекст продукта
+- Описание MVP и юзер флоу: см. `PRODUCT.md` в корне репозитория.
