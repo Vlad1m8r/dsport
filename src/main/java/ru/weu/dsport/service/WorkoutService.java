@@ -116,6 +116,7 @@ public class WorkoutService {
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Workout exercise not found"));
         session.getExercises().remove(workoutExercise);
+        workoutSessionRepository.save(session);
     }
 
     @Transactional
@@ -164,6 +165,7 @@ public class WorkoutService {
             throw new NotFoundException("Set entry not found");
         }
         targetExercise.getSetEntries().remove(targetSet);
+        workoutSessionRepository.save(session);
     }
 
     private String formatTitle(OffsetDateTime now, String templateName) {

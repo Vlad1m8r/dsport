@@ -12,8 +12,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -55,5 +55,5 @@ public class TemplateExercise {
             orphanRemoval = true
     )
     @OrderBy("orderIndex ASC")
-    private List<TemplateSet> sets = new ArrayList<>();
+    private Set<TemplateSet> sets = new LinkedHashSet<>();
 }

@@ -13,6 +13,7 @@ These guidelines apply to the entire repository unless a nested `AGENTS.md` over
 - Ensure every HTTP endpoint, controller method, and related DTO is documented with OpenAPI annotations (e.g., `@Operation`, `@ApiResponse`, `@Schema`) so the generated specification stays accurate.
 - Используйте Lombok там, где это оправдано и помогает сократить шаблонный код.
 - Отдавайте предпочтение модульным тестам; интеграционные тесты добавляйте только при острой необходимости.
+- Для коллекций JPA избегайте одновременного fetch нескольких `List` (bag) в одной сущности: используйте `Set` либо `@OrderColumn`, чтобы предотвратить `MultipleBagFetchException`.
 
 ## Tech Stack (fixed)
 - Java: 21
