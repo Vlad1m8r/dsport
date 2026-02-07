@@ -41,6 +41,21 @@ These guidelines apply to the entire repository unless a nested `AGENTS.md` over
 - Migration naming: VYYYYMMDD_HHMM__short_description.sql
 - Migrations are append-only; never edit already applied migrations.
 
+## Hibernate / JPA Collection Rules (Important)
+- Do NOT change collection types (List/Set) in entities without checking:
+ 1) equals/hashCode strategy,
+ 2) persistence lifecycle (transient entities have null id),
+ 3) ordering requirements and API contract.
+- Avoid Set for child entities with @EqualsAndHashCode based only on id, because new entities have null id and will collapse in Set.
+  Use List + explicit business order field (orderIndex) + @OrderBy("orderIndex ASC") for ordered children.
+
+## Fetching rules
+- Do NOT use JOIN FETCH to fetch multiple List ("bag") collections in one query (causes MultipleBagFetchException).
+- Prefer:
+ - EntityGraph fetching only one collection level, and load deeper collections separately, or
+ - batch fetching (@BatchSize / hibernate.default_batch_fetch_size).
+- Any change to fetching strategy must keep existing use-cases working (createTemplate/startWorkout/etc.).
+
 ## API Conventions
 - JSON: camelCase
 - Use Bean Validation on request DTOs.
