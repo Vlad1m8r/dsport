@@ -146,26 +146,17 @@ public class WorkoutService {
     }
 
     @Transactional
-    public void deleteSetEntry(Long workoutId, Long setEntryId) {
+    public void deleteSetEntry(Long workoutId, Long workoutExerciseId, Long setEntryId) {
         AppUser user = currentUserService.getCurrentUser();
         WorkoutSession session = getWorkoutSession(workoutId, user.getId());
-        SetEntry targetSet = null;
-        WorkoutExercise targetExercise = null;
-        for (WorkoutExercise exercise : session.getExercises()) {
-            for (SetEntry setEntry : exercise.getSetEntries()) {
-                if (setEntry.getId().equals(setEntryId)) {
-                    targetSet = setEntry;
-                    targetExercise = exercise;
-                    break;
-                }
-            }
-            if (targetSet != null) {
-                break;
-            }
-        }
-        if (targetSet == null || targetExercise == null) {
-            throw new NotFoundException("Set entry not found");
-        }
+        WorkoutExercise targetExercise = session.getExercises().stream()
+                .filter(exercise -> exercise.getId().equals(workoutExerciseId))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Workout exercise not found"));
+        SetEntry targetSet = targetExercise.getSetEntries().stream()
+                .filter(setEntry -> setEntry.getId().equals(setEntryId))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Set entry not found"));
         targetExercise.getSetEntries().remove(targetSet);
         workoutSessionRepository.save(session);
     }

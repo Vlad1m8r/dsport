@@ -94,7 +94,7 @@ public class WorkoutController {
         return workoutService.addSetEntry(workoutId, workoutExerciseId, request);
     }
 
-    @DeleteMapping("/{workoutId}/sets/{setEntryId}")
+    @DeleteMapping("/{workoutId}/exercises/{workoutExerciseId}/sets/{setEntryId}")
     @Operation(summary = "Удалить подход из тренировки")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Подход удален"),
@@ -103,9 +103,10 @@ public class WorkoutController {
     })
     public ResponseEntity<Void> deleteSetEntry(
             @PathVariable Long workoutId,
+            @PathVariable Long workoutExerciseId,
             @PathVariable Long setEntryId
     ) {
-        workoutService.deleteSetEntry(workoutId, setEntryId);
+        workoutService.deleteSetEntry(workoutId, workoutExerciseId, setEntryId);
         return ResponseEntity.noContent().build();
     }
 }
