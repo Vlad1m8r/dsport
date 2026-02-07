@@ -29,7 +29,6 @@ public class TemplateSet {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @EqualsAndHashCode.Include
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -43,5 +42,6 @@ public class TemplateSet {
     private Integer plannedDurationSeconds;
 
     @Column(name = "order_index", nullable = false)
+    @EqualsAndHashCode.Include
     private int orderIndex;
 }
