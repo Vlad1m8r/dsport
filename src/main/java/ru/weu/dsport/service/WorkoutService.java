@@ -22,6 +22,7 @@ import ru.weu.dsport.dto.WorkoutSessionResponse;
 import ru.weu.dsport.exception.NotFoundException;
 import ru.weu.dsport.mapper.WorkoutMapper;
 import ru.weu.dsport.repository.ExerciseRepository;
+import ru.weu.dsport.repository.SetEntryRepository;
 import ru.weu.dsport.repository.WorkoutSessionRepository;
 import ru.weu.dsport.repository.WorkoutTemplateRepository;
 
@@ -34,6 +35,7 @@ public class WorkoutService {
     private final ExerciseRepository exerciseRepository;
     private final CurrentUserService currentUserService;
     private final WorkoutMapper workoutMapper;
+    private final SetEntryRepository setEntryRepository;
 
     @Transactional
     public WorkoutSessionResponse startWorkout(StartWorkoutRequest request) {
@@ -177,7 +179,20 @@ public class WorkoutService {
     }
 
     private WorkoutSession getWorkoutSession(Long workoutId, Long userId) {
-        return workoutSessionRepository.findByIdAndUserId(workoutId, userId)
+        WorkoutSession session = workoutSessionRepository.findByIdAndUserId(workoutId, userId)
                 .orElseThrow(() -> new NotFoundException("Workout session not found"));
+        preloadSetEntries(session);
+        return session;
+    }
+
+    private void preloadSetEntries(WorkoutSession session) {
+        List<Long> exerciseIds = session.getExercises().stream()
+                .map(WorkoutExercise::getId)
+                .filter(id -> id != null)
+                .toList();
+        if (exerciseIds.isEmpty()) {
+            return;
+        }
+        setEntryRepository.findByWorkoutExerciseIdIn(exerciseIds);
     }
 }

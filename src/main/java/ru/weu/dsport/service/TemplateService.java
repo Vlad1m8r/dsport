@@ -21,6 +21,7 @@ import ru.weu.dsport.dto.TemplateResponse;
 import ru.weu.dsport.exception.NotFoundException;
 import ru.weu.dsport.mapper.TemplateMapper;
 import ru.weu.dsport.repository.ExerciseRepository;
+import ru.weu.dsport.repository.TemplateSetRepository;
 import ru.weu.dsport.repository.WorkoutTemplateRepository;
 
 @Service
@@ -31,6 +32,7 @@ public class TemplateService {
     private final ExerciseRepository exerciseRepository;
     private final CurrentUserService currentUserService;
     private final TemplateMapper templateMapper;
+    private final TemplateSetRepository templateSetRepository;
 
     @Transactional
     public TemplateResponse createTemplate(TemplateCreateRequest request) {
@@ -50,7 +52,10 @@ public class TemplateService {
 
     public List<TemplateResponse> listTemplates() {
         AppUser user = currentUserService.getCurrentUser();
-        return workoutTemplateRepository.findByOwnerUserIdAndDeletedAtIsNull(user.getId()).stream()
+        List<WorkoutTemplate> templates = workoutTemplateRepository
+                .findByOwnerUserIdAndDeletedAtIsNull(user.getId());
+        preloadTemplateSets(templates);
+        return templates.stream()
                 .map(templateMapper::toResponse)
                 .toList();
     }
@@ -60,6 +65,7 @@ public class TemplateService {
         WorkoutTemplate template = workoutTemplateRepository
                 .findByIdAndOwnerUserIdAndDeletedAtIsNull(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Template not found"));
+        preloadTemplateSets(List.of(template));
         return templateMapper.toResponse(template);
     }
 
@@ -138,5 +144,17 @@ public class TemplateService {
                     .build();
             templateExercise.getSets().add(templateSet);
         }
+    }
+
+    private void preloadTemplateSets(List<WorkoutTemplate> templates) {
+        List<Long> exerciseIds = templates.stream()
+                .flatMap(template -> template.getExercises().stream())
+                .map(TemplateExercise::getId)
+                .filter(id -> id != null)
+                .toList();
+        if (exerciseIds.isEmpty()) {
+            return;
+        }
+        templateSetRepository.findByTemplateExerciseIdIn(exerciseIds);
     }
 }

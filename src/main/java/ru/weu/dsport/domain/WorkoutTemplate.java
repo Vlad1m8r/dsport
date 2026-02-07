@@ -13,8 +13,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -61,5 +61,5 @@ public class WorkoutTemplate {
             orphanRemoval = true
     )
     @OrderBy("orderIndex ASC")
-    private Set<TemplateExercise> exercises = new LinkedHashSet<>();
+    private List<TemplateExercise> exercises = new ArrayList<>();
 }
