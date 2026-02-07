@@ -1,6 +1,7 @@
 package ru.weu.dsport.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -47,7 +48,8 @@ public class TemplateController {
     @Operation(summary = "Получить список шаблонов")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Список шаблонов",
-                    content = @Content(schema = @Schema(implementation = TemplateResponse.class)))
+                    content = @Content(array = @ArraySchema(
+                            schema = @Schema(implementation = TemplateResponse.class))))
     })
     public List<TemplateResponse> list() {
         return templateService.listTemplates();
