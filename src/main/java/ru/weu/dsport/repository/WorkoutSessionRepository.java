@@ -11,7 +11,7 @@ import ru.weu.dsport.domain.WorkoutSession;
 
 public interface WorkoutSessionRepository extends JpaRepository<WorkoutSession, Long> {
 
-    @EntityGraph(attributePaths = {"exercises", "exercises.exercise", "exercises.setEntries"})
+    @EntityGraph(attributePaths = {"exercises", "exercises.exercise"})
     Optional<WorkoutSession> findByIdAndUserId(Long id, Long userId);
 
     @Query(value = """

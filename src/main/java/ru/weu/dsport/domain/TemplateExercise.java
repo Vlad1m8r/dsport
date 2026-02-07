@@ -34,7 +34,6 @@ public class TemplateExercise {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @EqualsAndHashCode.Include
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -43,9 +42,11 @@ public class TemplateExercise {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "exercise_id", nullable = false)
+    @EqualsAndHashCode.Include
     private Exercise exercise;
 
     @Column(name = "order_index", nullable = false)
+    @EqualsAndHashCode.Include
     private int orderIndex;
 
     @Builder.Default

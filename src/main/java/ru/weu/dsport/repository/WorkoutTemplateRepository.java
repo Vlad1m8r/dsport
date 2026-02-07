@@ -8,9 +8,9 @@ import ru.weu.dsport.domain.WorkoutTemplate;
 
 public interface WorkoutTemplateRepository extends JpaRepository<WorkoutTemplate, Long> {
 
-    @EntityGraph(attributePaths = {"exercises", "exercises.exercise", "exercises.sets"})
+    @EntityGraph(attributePaths = {"exercises", "exercises.exercise"})
     List<WorkoutTemplate> findByOwnerUserIdAndDeletedAtIsNull(Long ownerUserId);
 
-    @EntityGraph(attributePaths = {"exercises", "exercises.exercise", "exercises.sets"})
+    @EntityGraph(attributePaths = {"exercises", "exercises.exercise"})
     Optional<WorkoutTemplate> findByIdAndOwnerUserIdAndDeletedAtIsNull(Long id, Long ownerUserId);
 }

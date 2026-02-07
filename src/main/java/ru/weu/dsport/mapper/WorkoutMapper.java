@@ -25,7 +25,7 @@ public class WorkoutMapper {
                 .build();
     }
 
-    private WorkoutSessionResponse.WorkoutExerciseResponse toExerciseResponse(WorkoutExercise exercise) {
+    public WorkoutSessionResponse.WorkoutExerciseResponse toExerciseResponse(WorkoutExercise exercise) {
         List<WorkoutSessionResponse.SetEntryResponse> sets = exercise.getSetEntries().stream()
                 .map(this::toSetResponse)
                 .collect(Collectors.toList());
@@ -37,7 +37,7 @@ public class WorkoutMapper {
                 .build();
     }
 
-    private WorkoutSessionResponse.SetEntryResponse toSetResponse(SetEntry setEntry) {
+    public WorkoutSessionResponse.SetEntryResponse toSetResponse(SetEntry setEntry) {
         return WorkoutSessionResponse.SetEntryResponse.builder()
                 .id(setEntry.getId())
                 .orderIndex(setEntry.getOrderIndex())
