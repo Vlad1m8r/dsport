@@ -69,3 +69,4 @@ These guidelines apply to the entire repository unless a nested `AGENTS.md` over
 
 ## Контекст продукта
 - Описание MVP и юзер флоу: см. `PRODUCT.md` в корне репозитория.
+- Описание проекта см. пакет `docs` в корне репозитория
