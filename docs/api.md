@@ -14,7 +14,8 @@
 - DELETE /api/workouts/{workoutId}/exercises/{workoutExerciseId}
 - POST /api/workouts/{workoutId}/exercises
 - POST /api/workouts/{workoutId}/exercises/{workoutExerciseId}/sets
-- DELETE /api/workouts/{workoutId}/sets/{setEntryId}
+- PATCH /api/workouts/{workoutId}/sets/{setEntryId}
+- DELETE /api/workouts/{workoutId}/exercises/{workoutExerciseId}/sets/{setEntryId}
 
 ### Stats
 - GET /api/exercises/{exerciseId}/last-max

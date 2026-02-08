@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.weu.dsport.dto.AddSetEntryRequest;
 import ru.weu.dsport.dto.AddWorkoutExerciseRequest;
 import ru.weu.dsport.dto.StartWorkoutRequest;
+import ru.weu.dsport.dto.UpdateSetEntryRequest;
 import ru.weu.dsport.dto.WorkoutSessionResponse;
 import ru.weu.dsport.exception.ApiError;
 import ru.weu.dsport.service.WorkoutService;
@@ -108,5 +110,24 @@ public class WorkoutController {
     ) {
         workoutService.deleteSetEntry(workoutId, workoutExerciseId, setEntryId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{workoutId}/sets/{setEntryId}")
+    @Operation(summary = "Обновить подход в тренировке")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Подход обновлен",
+                    content = @Content(schema = @Schema(
+                            implementation = WorkoutSessionResponse.SetEntryResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Ошибка валидации",
+                    content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "404", description = "Тренировка или подход не найдены",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    public WorkoutSessionResponse.SetEntryResponse updateSetEntry(
+            @PathVariable Long workoutId,
+            @PathVariable Long setEntryId,
+            @Valid @RequestBody UpdateSetEntryRequest request
+    ) {
+        return workoutService.updateSetEntry(workoutId, setEntryId, request);
     }
 }
