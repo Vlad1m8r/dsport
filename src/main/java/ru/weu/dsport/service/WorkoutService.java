@@ -199,6 +199,7 @@ public class WorkoutService {
         if (request.isDurationSecondsProvided()) {
             setEntry.setDurationSeconds(request.getDurationSeconds());
         }
+        setEntryRepository.save(setEntry);
         return workoutMapper.toSetResponse(setEntry);
     }
 

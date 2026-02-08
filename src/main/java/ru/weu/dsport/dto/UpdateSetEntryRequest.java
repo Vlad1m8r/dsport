@@ -1,21 +1,18 @@
 package ru.weu.dsport.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.AssertTrue;
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "Запрос на обновление подхода")
-@JsonDeserialize(using = UpdateSetEntryRequestDeserializer.class)
 public class UpdateSetEntryRequest {
 
     @Schema(description = "Порядок подхода", example = "1", nullable = true)
@@ -41,6 +38,30 @@ public class UpdateSetEntryRequest {
 
     @JsonIgnore
     private boolean durationSecondsProvided;
+
+    @JsonSetter("orderIndex")
+    public void setOrderIndex(Integer orderIndex) {
+        this.orderIndex = orderIndex;
+        this.orderIndexProvided = true;
+    }
+
+    @JsonSetter("reps")
+    public void setReps(Integer reps) {
+        this.reps = reps;
+        this.repsProvided = true;
+    }
+
+    @JsonSetter("weight")
+    public void setWeight(BigDecimal weight) {
+        this.weight = weight;
+        this.weightProvided = true;
+    }
+
+    @JsonSetter("durationSeconds")
+    public void setDurationSeconds(Integer durationSeconds) {
+        this.durationSeconds = durationSeconds;
+        this.durationSecondsProvided = true;
+    }
 
     @AssertTrue(message = "orderIndex должен быть >= 1")
     @Schema(hidden = true)
