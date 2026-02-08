@@ -1,7 +1,7 @@
 package ru.weu.dsport.repository;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -42,7 +42,7 @@ public interface WorkoutSessionRepository extends JpaRepository<WorkoutSession, 
     interface ExerciseLastMaxProjection {
         Long getLastWorkoutId();
 
-        OffsetDateTime getLastWorkoutStartedAt();
+        Instant getLastWorkoutStartedAt();
 
         BigDecimal getMaxWeight();
 
