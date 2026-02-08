@@ -6,6 +6,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.weu.dsport.domain.AppUser;
 import ru.weu.dsport.domain.Exercise;
@@ -20,10 +21,12 @@ import ru.weu.dsport.dto.AddWorkoutExerciseRequest;
 import ru.weu.dsport.dto.StartWorkoutRequest;
 import ru.weu.dsport.dto.UpdateSetEntryRequest;
 import ru.weu.dsport.dto.WorkoutSessionResponse;
+import ru.weu.dsport.dto.WorkoutSummaryResponse;
 import ru.weu.dsport.exception.BadRequestException;
 import ru.weu.dsport.exception.NotFoundException;
 import ru.weu.dsport.mapper.WorkoutMapper;
 import ru.weu.dsport.repository.ExerciseRepository;
+import ru.weu.dsport.repository.OffsetBasedPageRequest;
 import ru.weu.dsport.repository.SetEntryRepository;
 import ru.weu.dsport.repository.WorkoutExerciseRepository;
 import ru.weu.dsport.repository.WorkoutSessionRepository;
@@ -32,6 +35,9 @@ import ru.weu.dsport.repository.WorkoutTemplateRepository;
 @Service
 @RequiredArgsConstructor
 public class WorkoutService {
+
+    private static final int DEFAULT_LIMIT = 20;
+    private static final int MIN_LIMIT = 1;
 
     private final WorkoutTemplateRepository workoutTemplateRepository;
     private final WorkoutSessionRepository workoutSessionRepository;
@@ -87,6 +93,31 @@ public class WorkoutService {
         }
         WorkoutSession savedSession = workoutSessionRepository.saveAndFlush(session);
         return workoutMapper.toResponse(savedSession);
+    }
+
+    @Transactional
+    public List<WorkoutSummaryResponse> listWorkouts(Integer limit, Integer offset) {
+        int resolvedLimit = limit == null ? DEFAULT_LIMIT : limit;
+        int resolvedOffset = offset == null ? 0 : offset;
+        if (resolvedLimit < MIN_LIMIT) {
+            throw new BadRequestException("limit должен быть >= 1");
+        }
+        if (resolvedOffset < 0) {
+            throw new BadRequestException("offset должен быть >= 0");
+        }
+        AppUser user = currentUserService.getCurrentUser();
+        Sort sort = Sort.by(Sort.Order.desc("startedAt"), Sort.Order.desc("id"));
+        OffsetBasedPageRequest pageRequest = new OffsetBasedPageRequest(resolvedOffset, resolvedLimit, sort);
+        return workoutSessionRepository.findByUserId(user.getId(), pageRequest).stream()
+                .map(workoutMapper::toSummaryResponse)
+                .toList();
+    }
+
+    @Transactional
+    public WorkoutSessionResponse getWorkout(Long workoutId) {
+        AppUser user = currentUserService.getCurrentUser();
+        WorkoutSession session = getWorkoutSession(workoutId, user.getId());
+        return workoutMapper.toResponse(session);
     }
 
     @Transactional
