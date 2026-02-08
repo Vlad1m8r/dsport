@@ -18,7 +18,9 @@ import ru.weu.dsport.domain.WorkoutTemplate;
 import ru.weu.dsport.dto.AddSetEntryRequest;
 import ru.weu.dsport.dto.AddWorkoutExerciseRequest;
 import ru.weu.dsport.dto.StartWorkoutRequest;
+import ru.weu.dsport.dto.UpdateSetEntryRequest;
 import ru.weu.dsport.dto.WorkoutSessionResponse;
+import ru.weu.dsport.exception.BadRequestException;
 import ru.weu.dsport.exception.NotFoundException;
 import ru.weu.dsport.mapper.WorkoutMapper;
 import ru.weu.dsport.repository.ExerciseRepository;
@@ -159,6 +161,46 @@ public class WorkoutService {
                 .orElseThrow(() -> new NotFoundException("Set entry not found"));
         targetExercise.getSetEntries().remove(targetSet);
         workoutSessionRepository.save(session);
+    }
+
+    @Transactional
+    public WorkoutSessionResponse.SetEntryResponse updateSetEntry(
+            Long workoutId,
+            Long setEntryId,
+            UpdateSetEntryRequest request
+    ) {
+        AppUser user = currentUserService.getCurrentUser();
+        SetEntry setEntry = setEntryRepository.findByIdWithSession(setEntryId)
+                .orElseThrow(() -> new NotFoundException("Set entry not found"));
+        WorkoutSession session = setEntry.getWorkoutExercise().getWorkoutSession();
+        if (!session.getId().equals(workoutId) || !session.getUser().getId().equals(user.getId())) {
+            throw new NotFoundException("Set entry not found");
+        }
+        Integer updatedReps = request.isRepsProvided() ? request.getReps() : setEntry.getReps();
+        Integer updatedDuration = request.isDurationSecondsProvided()
+                ? request.getDurationSeconds()
+                : setEntry.getDurationSeconds();
+        if (updatedReps == null && updatedDuration == null) {
+            throw new BadRequestException("reps или durationSeconds должны быть заданы");
+        }
+        if (request.isOrderIndexProvided()) {
+            Integer orderIndex = request.getOrderIndex();
+            if (orderIndex == null) {
+                throw new BadRequestException("orderIndex должен быть >= 1");
+            }
+            setEntry.setOrderIndex(orderIndex);
+        }
+        if (request.isRepsProvided()) {
+            setEntry.setReps(request.getReps());
+        }
+        if (request.isWeightProvided()) {
+            setEntry.setWeight(request.getWeight());
+        }
+        if (request.isDurationSecondsProvided()) {
+            setEntry.setDurationSeconds(request.getDurationSeconds());
+        }
+        setEntryRepository.save(setEntry);
+        return workoutMapper.toSetResponse(setEntry);
     }
 
     private String formatTitle(OffsetDateTime now, String templateName) {

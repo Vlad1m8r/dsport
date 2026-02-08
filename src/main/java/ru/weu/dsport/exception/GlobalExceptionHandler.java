@@ -45,6 +45,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiError> handleBadRequest(
+            BadRequestException ex,
+            HttpServletRequest request
+    ) {
+        ApiError response = ApiError.builder()
+                .timestamp(OffsetDateTime.now(ZoneOffset.UTC))
+                .path(request.getRequestURI())
+                .code("BAD_REQUEST")
+                .message(ex.getMessage())
+                .details(null)
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(
             MethodArgumentNotValidException ex,
