@@ -1,25 +1,31 @@
 package ru.weu.dsport.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.weu.dsport.dto.AddSetEntryRequest;
 import ru.weu.dsport.dto.AddWorkoutExerciseRequest;
 import ru.weu.dsport.dto.StartWorkoutRequest;
 import ru.weu.dsport.dto.UpdateSetEntryRequest;
 import ru.weu.dsport.dto.WorkoutSessionResponse;
+import ru.weu.dsport.dto.WorkoutSummaryResponse;
 import ru.weu.dsport.exception.ApiError;
 import ru.weu.dsport.service.WorkoutService;
 
@@ -29,6 +35,34 @@ import ru.weu.dsport.service.WorkoutService;
 public class WorkoutController {
 
     private final WorkoutService workoutService;
+
+    @GetMapping
+    @Operation(summary = "Получить список тренировок пользователя")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Список тренировок",
+                    content = @Content(array = @ArraySchema(
+                            schema = @Schema(implementation = WorkoutSummaryResponse.class))))
+    })
+    public List<WorkoutSummaryResponse> listWorkouts(
+            @Parameter(description = "Лимит записей", example = "20")
+            @RequestParam(required = false) Integer limit,
+            @Parameter(description = "Смещение", example = "0")
+            @RequestParam(required = false) Integer offset
+    ) {
+        return workoutService.listWorkouts(limit, offset);
+    }
+
+    @GetMapping("/{workoutId}")
+    @Operation(summary = "Получить тренировку по идентификатору")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Тренировка",
+                    content = @Content(schema = @Schema(implementation = WorkoutSessionResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Тренировка не найдена",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    public WorkoutSessionResponse getWorkout(@PathVariable Long workoutId) {
+        return workoutService.getWorkout(workoutId);
+    }
 
     @PostMapping("/start")
     @Operation(summary = "Запустить тренировку")

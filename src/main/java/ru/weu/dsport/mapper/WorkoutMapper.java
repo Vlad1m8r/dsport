@@ -7,6 +7,7 @@ import ru.weu.dsport.domain.SetEntry;
 import ru.weu.dsport.domain.WorkoutExercise;
 import ru.weu.dsport.domain.WorkoutSession;
 import ru.weu.dsport.dto.WorkoutSessionResponse;
+import ru.weu.dsport.dto.WorkoutSummaryResponse;
 
 @Component
 public class WorkoutMapper {
@@ -22,6 +23,16 @@ public class WorkoutMapper {
                 .startedAt(session.getStartedAt())
                 .templateId(templateId)
                 .exercises(exercises)
+                .build();
+    }
+
+    public WorkoutSummaryResponse toSummaryResponse(WorkoutSession session) {
+        Long templateId = session.getTemplate() == null ? null : session.getTemplate().getId();
+        return WorkoutSummaryResponse.builder()
+                .id(session.getId())
+                .title(session.getTitle())
+                .startedAt(session.getStartedAt())
+                .templateId(templateId)
                 .build();
     }
 
