@@ -41,20 +41,22 @@ public class TgInitDataFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         String initData = request.getHeader("X-Tg-Init-Data");
+        String method = request.getMethod();
         boolean initDataPresent = StringUtils.hasText(initData);
         log.debug("initData present: {}", initDataPresent);
 
         try {
-            if (!initDataPresent) {
-                throw new InvalidInitDataException("X-Tg-Init-Data header is missing");
+            if (!method.equals("OPTIONS")) {
+                if (!initDataPresent) {
+                    throw new InvalidInitDataException("X-Tg-Init-Data header is missing");
+                }
+
+                long tgUserId = tgInitDataParser.parseUserId(initData);
+                AppUser currentUser = currentUserService.getOrCreateCurrentUser(tgUserId);
+                CurrentUserContext.set(currentUser.getId(), tgUserId);
+                request.setAttribute(CurrentUserContext.CURRENT_USER_ID_ATTRIBUTE, currentUser.getId());
+                request.setAttribute(CurrentUserContext.CURRENT_TG_USER_ID_ATTRIBUTE, tgUserId);
             }
-
-            long tgUserId = tgInitDataParser.parseUserId(initData);
-            AppUser currentUser = currentUserService.getOrCreateCurrentUser(tgUserId);
-            CurrentUserContext.set(currentUser.getId(), tgUserId);
-            request.setAttribute(CurrentUserContext.CURRENT_USER_ID_ATTRIBUTE, currentUser.getId());
-            request.setAttribute(CurrentUserContext.CURRENT_TG_USER_ID_ATTRIBUTE, tgUserId);
-
             filterChain.doFilter(request, response);
         } catch (InvalidInitDataException ex) {
             handlerExceptionResolver.resolveException(request, response, null, ex);
