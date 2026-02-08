@@ -70,3 +70,5 @@ These guidelines apply to the entire repository unless a nested `AGENTS.md` over
 ## Контекст продукта
 - Описание MVP и юзер флоу: см. `PRODUCT.md` в корне репозитория.
 - Описание проекта см. пакет `docs` в корне репозитория
+
+- Если метод создаёт новую сущность и возвращает её DTO, необходимо гарантировать, что id уже сгенерирован (использовать saveAndFlush/flush или сохранять конкретную сущность), иначе DTO может содержать id=null при GenerationType.IDENTITY.

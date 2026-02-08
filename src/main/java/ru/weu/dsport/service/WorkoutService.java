@@ -25,6 +25,7 @@ import ru.weu.dsport.exception.NotFoundException;
 import ru.weu.dsport.mapper.WorkoutMapper;
 import ru.weu.dsport.repository.ExerciseRepository;
 import ru.weu.dsport.repository.SetEntryRepository;
+import ru.weu.dsport.repository.WorkoutExerciseRepository;
 import ru.weu.dsport.repository.WorkoutSessionRepository;
 import ru.weu.dsport.repository.WorkoutTemplateRepository;
 
@@ -38,6 +39,7 @@ public class WorkoutService {
     private final CurrentUserService currentUserService;
     private final WorkoutMapper workoutMapper;
     private final SetEntryRepository setEntryRepository;
+    private final WorkoutExerciseRepository workoutExerciseRepository;
 
     @Transactional
     public WorkoutSessionResponse startWorkout(StartWorkoutRequest request) {
@@ -83,7 +85,7 @@ public class WorkoutService {
                 session.getExercises().add(workoutExercise);
             }
         }
-        WorkoutSession savedSession = workoutSessionRepository.save(session);
+        WorkoutSession savedSession = workoutSessionRepository.saveAndFlush(session);
         return workoutMapper.toResponse(savedSession);
     }
 
@@ -107,8 +109,8 @@ public class WorkoutService {
                 .orderIndex(request.getOrderIndex())
                 .build();
         session.getExercises().add(workoutExercise);
-        workoutSessionRepository.save(session);
-        return workoutMapper.toExerciseResponse(workoutExercise);
+        WorkoutExercise savedExercise = workoutExerciseRepository.saveAndFlush(workoutExercise);
+        return workoutMapper.toExerciseResponse(savedExercise);
     }
 
     @Transactional
@@ -143,8 +145,8 @@ public class WorkoutService {
                 .durationSeconds(request.getDurationSeconds())
                 .build();
         workoutExercise.getSetEntries().add(setEntry);
-        workoutSessionRepository.save(session);
-        return workoutMapper.toSetResponse(setEntry);
+        SetEntry savedSetEntry = setEntryRepository.saveAndFlush(setEntry);
+        return workoutMapper.toSetResponse(savedSetEntry);
     }
 
     @Transactional
