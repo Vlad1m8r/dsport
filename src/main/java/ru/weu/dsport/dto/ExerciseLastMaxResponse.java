@@ -2,7 +2,7 @@ package ru.weu.dsport.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,12 +22,12 @@ public class ExerciseLastMaxResponse {
     private Long lastWorkoutId;
 
     @Schema(description = "Дата и время старта последней тренировки", nullable = true)
-    private OffsetDateTime lastWorkoutStartedAt;
+    private Instant lastWorkoutStartedAt;
 
-    @Schema(description = "Максимальный вес в последней тренировке", example = "80.0", nullable = true)
+    @Schema(description = "Максимальный вес в последней тренировке (0 если данных нет)", example = "80.0")
     private BigDecimal maxWeight;
 
-    @Schema(description = "Максимальная длительность в секундах в последней тренировке", example = "120",
-            nullable = true)
+    @Schema(description = "Максимальная длительность в секундах в последней тренировке (0 если данных нет)",
+            example = "120")
     private Integer maxDurationSeconds;
 }

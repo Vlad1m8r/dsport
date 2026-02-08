@@ -1,5 +1,6 @@
 package ru.weu.dsport.service;
 
+import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.weu.dsport.dto.ExerciseLastMaxResponse;
@@ -27,14 +28,18 @@ public class ExerciseStatsService {
                 .orElse(null);
 
         ExerciseLastMaxResponse.ExerciseLastMaxResponseBuilder responseBuilder = ExerciseLastMaxResponse.builder()
-                .exerciseId(exerciseId);
+                .exerciseId(exerciseId)
+                .maxWeight(BigDecimal.ZERO)
+                .maxDurationSeconds(0);
 
         if (projection != null) {
             responseBuilder
                     .lastWorkoutId(projection.getLastWorkoutId())
                     .lastWorkoutStartedAt(projection.getLastWorkoutStartedAt())
-                    .maxWeight(projection.getMaxWeight())
-                    .maxDurationSeconds(projection.getMaxDurationSeconds());
+                    .maxWeight(projection.getMaxWeight() != null ? projection.getMaxWeight() : BigDecimal.ZERO)
+                    .maxDurationSeconds(projection.getMaxDurationSeconds() != null
+                            ? projection.getMaxDurationSeconds()
+                            : 0);
         }
 
         return responseBuilder.build();
