@@ -46,7 +46,7 @@ public class TemplateService {
                 .build();
         Map<Long, Exercise> exercisesById = loadExercises(user, request.getExercises());
         applyExercises(template, request.getExercises(), exercisesById);
-        WorkoutTemplate savedTemplate = workoutTemplateRepository.save(template);
+        WorkoutTemplate savedTemplate = workoutTemplateRepository.saveAndFlush(template);
         return templateMapper.toResponse(savedTemplate);
     }
 
@@ -81,7 +81,7 @@ public class TemplateService {
         template.getExercises().clear();
         Map<Long, Exercise> exercisesById = loadExercises(user, request.getExercises());
         applyExercises(template, request.getExercises(), exercisesById);
-        WorkoutTemplate savedTemplate = workoutTemplateRepository.save(template);
+        WorkoutTemplate savedTemplate = workoutTemplateRepository.saveAndFlush(template);
         return templateMapper.toResponse(savedTemplate);
     }
 
