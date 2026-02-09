@@ -9,5 +9,5 @@
 - Добавлена миграция V2__workout_finish.sql: finished_at в workout_session и индекс по (user_id, finished_at desc) для
   завершенных тренировок.
 - Добавлен POST /api/workouts/{workoutId}/finish с идемпотентным завершением тренировки, валидацией пустых подходов
-  (отсутствие reps/weight или duration) и блокировкой изменений после завершения (код ошибки WORKOUT_FINISHED).
+  (подход должен иметь duration или reps+weight) и блокировкой изменений после завершения (код ошибки WORKOUT_FINISHED).
 - Проверка: ./mvnw test.

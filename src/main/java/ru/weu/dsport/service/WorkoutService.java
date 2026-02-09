@@ -301,8 +301,8 @@ public class WorkoutService {
     private boolean isEmptySetEntry(SetEntry setEntry) {
         Integer reps = setEntry.getReps();
         Integer durationSeconds = setEntry.getDurationSeconds();
-        boolean repsInvalid = reps == null || reps == 0 || setEntry.getWeight() == null;
-        boolean durationInvalid = durationSeconds == null || durationSeconds == 0;
-        return repsInvalid || durationInvalid;
+        boolean hasDuration = durationSeconds != null && durationSeconds > 0;
+        boolean hasRepsWithWeight = reps != null && reps > 0 && setEntry.getWeight() != null;
+        return !hasDuration && !hasRepsWithWeight;
     }
 }
