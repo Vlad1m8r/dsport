@@ -252,7 +252,7 @@ public class WorkoutService {
         }
         boolean hasEmptySets = session.getExercises().stream()
                 .flatMap(exercise -> exercise.getSetEntries().stream())
-                .anyMatch(setEntry -> setEntry.getReps() == null && setEntry.getDurationSeconds() == null);
+                .anyMatch(this::isEmptySetEntry);
         if (hasEmptySets) {
             throw new BadRequestException(
                     "Тренировка содержит пустые подходы",
@@ -296,5 +296,13 @@ public class WorkoutService {
         if (session.getFinishedAt() != null) {
             throw new BadRequestException("Тренировка завершена", WORKOUT_FINISHED_CODE);
         }
+    }
+
+    private boolean isEmptySetEntry(SetEntry setEntry) {
+        Integer reps = setEntry.getReps();
+        Integer durationSeconds = setEntry.getDurationSeconds();
+        boolean repsInvalid = reps == null || reps == 0 || setEntry.getWeight() == null;
+        boolean durationInvalid = durationSeconds == null || durationSeconds == 0;
+        return repsInvalid || durationInvalid;
     }
 }
