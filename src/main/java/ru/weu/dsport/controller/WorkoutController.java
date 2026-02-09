@@ -78,6 +78,20 @@ public class WorkoutController {
         return workoutService.startWorkout(request);
     }
 
+    @PostMapping("/{workoutId}/finish")
+    @Operation(summary = "Завершить тренировку")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Тренировка завершена",
+                    content = @Content(schema = @Schema(implementation = WorkoutSessionResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Ошибка валидации",
+                    content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "404", description = "Тренировка не найдена",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    public WorkoutSessionResponse finishWorkout(@PathVariable Long workoutId) {
+        return workoutService.finishWorkout(workoutId);
+    }
+
     @PostMapping("/{workoutId}/exercises")
     @Operation(summary = "Добавить упражнение в тренировку")
     @ApiResponses({
@@ -100,6 +114,8 @@ public class WorkoutController {
     @Operation(summary = "Удалить упражнение из тренировки")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Упражнение удалено"),
+            @ApiResponse(responseCode = "400", description = "Тренировка завершена",
+                    content = @Content(schema = @Schema(implementation = ApiError.class))),
             @ApiResponse(responseCode = "404", description = "Тренировка или упражнение не найдены",
                     content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
@@ -134,6 +150,8 @@ public class WorkoutController {
     @Operation(summary = "Удалить подход из тренировки")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Подход удален"),
+            @ApiResponse(responseCode = "400", description = "Тренировка завершена",
+                    content = @Content(schema = @Schema(implementation = ApiError.class))),
             @ApiResponse(responseCode = "404", description = "Тренировка или подход не найдены",
                     content = @Content(schema = @Schema(implementation = ApiError.class)))
     })

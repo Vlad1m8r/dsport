@@ -23,6 +23,9 @@ public class WorkoutSummaryResponse {
     @Schema(description = "Дата и время старта")
     private OffsetDateTime startedAt;
 
+    @Schema(description = "Дата и время завершения", nullable = true)
+    private OffsetDateTime finishedAt;
+
     @Schema(description = "Идентификатор шаблона", example = "10", nullable = true)
     private Long templateId;
 }
