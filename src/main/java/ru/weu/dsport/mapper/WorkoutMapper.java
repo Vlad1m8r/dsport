@@ -21,6 +21,7 @@ public class WorkoutMapper {
                 .id(session.getId())
                 .title(session.getTitle())
                 .startedAt(session.getStartedAt())
+                .finishedAt(session.getFinishedAt())
                 .templateId(templateId)
                 .exercises(exercises)
                 .build();
@@ -32,6 +33,7 @@ public class WorkoutMapper {
                 .id(session.getId())
                 .title(session.getTitle())
                 .startedAt(session.getStartedAt())
+                .finishedAt(session.getFinishedAt())
                 .templateId(templateId)
                 .build();
     }

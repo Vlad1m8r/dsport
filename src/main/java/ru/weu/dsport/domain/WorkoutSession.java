@@ -52,6 +52,9 @@ public class WorkoutSession {
     @Column(name = "started_at", nullable = false)
     private OffsetDateTime startedAt;
 
+    @Column(name = "finished_at")
+    private OffsetDateTime finishedAt;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 

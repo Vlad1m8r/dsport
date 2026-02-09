@@ -50,10 +50,11 @@ public class GlobalExceptionHandler {
             BadRequestException ex,
             HttpServletRequest request
     ) {
+        String code = ex.getCode() == null ? "BAD_REQUEST" : ex.getCode();
         ApiError response = ApiError.builder()
                 .timestamp(OffsetDateTime.now(ZoneOffset.UTC))
                 .path(request.getRequestURI())
-                .code("BAD_REQUEST")
+                .code(code)
                 .message(ex.getMessage())
                 .details(null)
                 .build();

@@ -38,6 +38,8 @@ public class WorkoutService {
 
     private static final int DEFAULT_LIMIT = 20;
     private static final int MIN_LIMIT = 1;
+    private static final String WORKOUT_FINISHED_CODE = "WORKOUT_FINISHED";
+    private static final String WORKOUT_HAS_EMPTY_SETS_CODE = "WORKOUT_HAS_EMPTY_SETS";
 
     private final WorkoutTemplateRepository workoutTemplateRepository;
     private final WorkoutSessionRepository workoutSessionRepository;
@@ -127,6 +129,7 @@ public class WorkoutService {
     ) {
         AppUser user = currentUserService.getCurrentUser();
         WorkoutSession session = getWorkoutSession(workoutId, user.getId());
+        assertWorkoutNotFinished(session);
         Exercise exercise = exerciseRepository.findAvailableByIdsForUser(
                         user.getId(),
                         List.of(request.getExerciseId())
@@ -148,6 +151,7 @@ public class WorkoutService {
     public void deleteExercise(Long workoutId, Long workoutExerciseId) {
         AppUser user = currentUserService.getCurrentUser();
         WorkoutSession session = getWorkoutSession(workoutId, user.getId());
+        assertWorkoutNotFinished(session);
         WorkoutExercise workoutExercise = session.getExercises().stream()
                 .filter(exercise -> exercise.getId().equals(workoutExerciseId))
                 .findFirst()
@@ -164,6 +168,7 @@ public class WorkoutService {
     ) {
         AppUser user = currentUserService.getCurrentUser();
         WorkoutSession session = getWorkoutSession(workoutId, user.getId());
+        assertWorkoutNotFinished(session);
         WorkoutExercise workoutExercise = session.getExercises().stream()
                 .filter(exercise -> exercise.getId().equals(workoutExerciseId))
                 .findFirst()
@@ -184,6 +189,7 @@ public class WorkoutService {
     public void deleteSetEntry(Long workoutId, Long workoutExerciseId, Long setEntryId) {
         AppUser user = currentUserService.getCurrentUser();
         WorkoutSession session = getWorkoutSession(workoutId, user.getId());
+        assertWorkoutNotFinished(session);
         WorkoutExercise targetExercise = session.getExercises().stream()
                 .filter(exercise -> exercise.getId().equals(workoutExerciseId))
                 .findFirst()
@@ -209,6 +215,7 @@ public class WorkoutService {
         if (!session.getId().equals(workoutId) || !session.getUser().getId().equals(user.getId())) {
             throw new NotFoundException("Set entry not found");
         }
+        assertWorkoutNotFinished(session);
         Integer updatedReps = request.isRepsProvided() ? request.getReps() : setEntry.getReps();
         Integer updatedDuration = request.isDurationSecondsProvided()
                 ? request.getDurationSeconds()
@@ -236,6 +243,29 @@ public class WorkoutService {
         return workoutMapper.toSetResponse(setEntry);
     }
 
+    @Transactional
+    public WorkoutSessionResponse finishWorkout(Long workoutId) {
+        AppUser user = currentUserService.getCurrentUser();
+        WorkoutSession session = getWorkoutSession(workoutId, user.getId());
+        if (session.getFinishedAt() != null) {
+            return workoutMapper.toResponse(session);
+        }
+        boolean hasEmptySets = session.getExercises().stream()
+                .flatMap(exercise -> exercise.getSetEntries().stream())
+                .anyMatch(setEntry -> setEntry.getReps() == null && setEntry.getDurationSeconds() == null);
+        if (hasEmptySets) {
+            throw new BadRequestException(
+                    "Тренировка содержит пустые подходы",
+                    WORKOUT_HAS_EMPTY_SETS_CODE
+            );
+        }
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        session.setFinishedAt(now);
+        session.setUpdatedAt(now);
+        workoutSessionRepository.save(session);
+        return workoutMapper.toResponse(session);
+    }
+
     private String formatTitle(OffsetDateTime now, String templateName) {
         LocalDate date = now.toLocalDate();
         if (templateName == null || templateName.isBlank()) {
@@ -260,5 +290,11 @@ public class WorkoutService {
             return;
         }
         setEntryRepository.findByWorkoutExerciseIdIn(exerciseIds);
+    }
+
+    private void assertWorkoutNotFinished(WorkoutSession session) {
+        if (session.getFinishedAt() != null) {
+            throw new BadRequestException("Тренировка завершена", WORKOUT_FINISHED_CODE);
+        }
     }
 }
