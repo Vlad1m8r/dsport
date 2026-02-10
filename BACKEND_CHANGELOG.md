@@ -15,3 +15,5 @@
 - Добавлен POST /api/workouts/{workoutId}/finish с идемпотентным завершением тренировки, валидацией пустых подходов
   (подход должен иметь duration или reps+weight) и блокировкой изменений после завершения (код ошибки WORKOUT_FINISHED).
 - Проверка: ./mvnw test.
+- B12 — workout response includes exerciseName/type в `WorkoutSessionResponse.WorkoutExerciseResponse`; добавлены OpenAPI-описания полей и уточнена релевантность полей подхода для TIME vs REPS_WEIGHT.
+

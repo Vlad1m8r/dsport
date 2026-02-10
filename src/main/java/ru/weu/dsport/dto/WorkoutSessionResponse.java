@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import ru.weu.dsport.domain.ExerciseType;
 
 @Getter
 @Builder
@@ -47,6 +48,15 @@ public class WorkoutSessionResponse {
         @Schema(description = "Идентификатор упражнения", example = "1")
         private Long exerciseId;
 
+        @Schema(description = "Название упражнения", example = "Жим штанги лёжа")
+        private String exerciseName;
+
+        @Schema(
+                description = "Тип упражнения. REPS_WEIGHT — силовое (reps/weight), TIME — на время (durationSeconds)",
+                example = "REPS_WEIGHT"
+        )
+        private ExerciseType exerciseType;
+
         @Schema(description = "Порядок упражнения", example = "1")
         private int orderIndex;
 
@@ -67,13 +77,13 @@ public class WorkoutSessionResponse {
         @Schema(description = "Порядок подхода", example = "1")
         private int orderIndex;
 
-        @Schema(description = "Фактические повторы", example = "10", nullable = true)
+        @Schema(description = "Фактические повторы (для REPS_WEIGHT)", example = "10", nullable = true)
         private Integer reps;
 
-        @Schema(description = "Вес", example = "50.0", nullable = true)
+        @Schema(description = "Вес (для REPS_WEIGHT)", example = "50.0", nullable = true)
         private BigDecimal weight;
 
-        @Schema(description = "Длительность в секундах", example = "60", nullable = true)
+        @Schema(description = "Длительность в секундах (для TIME)", example = "60", nullable = true)
         private Integer durationSeconds;
     }
 }

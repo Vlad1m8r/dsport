@@ -38,10 +38,12 @@ public interface WorkoutSessionRepository extends JpaRepository<WorkoutSession, 
                 join workout_exercise we2 on we2.workout_session_id = ws2.id
                 where ws2.user_id = :userId
                   and we2.exercise_id = :exerciseId
+                  and ws2.finished_at is not null
                 order by ws2.started_at desc, ws2.id desc
                 limit 1
             )
               and we.exercise_id = :exerciseId
+              and ws.finished_at is not null
             group by ws.id, ws.started_at
             """, nativeQuery = true)
     Optional<ExerciseLastMaxProjection> findLastMaxByUserIdAndExerciseId(
