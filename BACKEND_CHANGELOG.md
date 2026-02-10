@@ -1,5 +1,9 @@
 # Backend Changelog
 
+- Добавлены endpoints exercise picker: GET /api/muscle-groups и GET /api/exercises с дефолтным scope=ALL,
+  опциональными фильтрами query/muscleGroup/scope, сортировкой (system -> my, затем name) и summary DTO.
+- Для exercise picker реализована загрузка muscle groups без N+1 через единый запрос (left join + агрегация в сервисе).
+- OpenAPI для новых endpoint'ов и DTO описан через аннотации в коде; YAML-спецификация будет сгенерирована отдельно.
 - Исправлена проекция времени для last-max (Instant вместо OffsetDateTime) и возвращаются нулевые значения
   maxWeight/maxDurationSeconds при отсутствии данных.
 - Добавлен PATCH /api/workouts/{workoutId}/sets/{setEntryId}: частичное обновление подхода с проверкой ownership
