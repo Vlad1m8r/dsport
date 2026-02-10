@@ -45,6 +45,8 @@ public class WorkoutMapper {
         return WorkoutSessionResponse.WorkoutExerciseResponse.builder()
                 .id(exercise.getId())
                 .exerciseId(exercise.getExercise().getId())
+                .exerciseName(exercise.getExercise().getName())
+                .exerciseType(exercise.getExercise().getType())
                 .orderIndex(exercise.getOrderIndex())
                 .sets(sets)
                 .build();
