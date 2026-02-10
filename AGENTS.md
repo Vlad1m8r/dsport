@@ -78,6 +78,8 @@ These guidelines apply to the entire repository unless a nested `AGENTS.md` over
 ### Памятка по симптомам
 - При `Could not determine ValueMapping for SqmParameter(...)` сначала проверить `@Query` на enum-параметры/enum-литералы и типонечитаемые `OR/CASE`.
 - Базовое исправление: перейти на `String in repo` или `Branching in service`.
+- Не применять `lower()`/`upper()` к параметрам JPQL-фильтра; нормализовать строки (lowercase/trim) в сервисе, собирать шаблон (`%value%`) в сервисе и сравнивать через `lower(column) like :pattern` (без `concat`/`||` с nullable-параметрами).
+- При ошибках `lower(bytea)` сначала проверить, что параметры запроса имеют корректные типы (`String`) и совпадение имён `@Param`, а также что запрос не вызывает `lower()` на параметре.
 
 ## API Conventions
 - JSON: camelCase
