@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.weu.dsport.domain.Exercise;
-import ru.weu.dsport.dto.ExerciseScope;
 import ru.weu.dsport.repository.projection.ExerciseSummaryRow;
 
 public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
@@ -42,16 +41,17 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
                    from e.muscleGroups mgFilter
                    where mgFilter.code = :muscleGroup
               ))
-              and (:scope = ru.weu.dsport.dto.ExerciseScope.ALL
-                   or (:scope = ru.weu.dsport.dto.ExerciseScope.SYSTEM and e.ownerUser is null)
-                   or (:scope = ru.weu.dsport.dto.ExerciseScope.MY and e.ownerUser.id = :ownerUserId))
+              and (:scope is null
+                   or :scope = 'ALL'
+                   or (:scope = 'SYSTEM' and e.ownerUser is null)
+                   or (:scope = 'MY' and e.ownerUser.id = :ownerUserId))
             order by case when e.ownerUser is null then 0 else 1 end,
                      lower(e.name),
                      e.id
             """)
     List<ExerciseSummaryRow> findSummaryRowsForPicker(
             @Param("ownerUserId") Long ownerUserId,
-            @Param("scope") ExerciseScope scope,
+            @Param("scope") String scope,
             @Param("query") String query,
             @Param("muscleGroup") String muscleGroup
     );

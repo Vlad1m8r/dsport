@@ -57,6 +57,28 @@ These guidelines apply to the entire repository unless a nested `AGENTS.md` over
  - batch fetching (@BatchSize / hibernate.default_batch_fetch_size).
 - Any change to fetching strategy must keep existing use-cases working (createTemplate/startWorkout/etc.).
 
+## Hibernate 6 Query Safety
+### Общие запреты/рекомендации
+- Не использовать enum-параметры и enum-литералы в JPQL/HQL (`@Query`) для сравнений вида `:param = Enum.VALUE`, в `CASE WHEN :param = ...`, а также в сложных `OR`-ветках с тем же параметром.
+- Не привязывать JPQL к enum из `dto`-пакетов. Enum для API допускаются в DTO, но в запросах использовать безопасные строковые/простые параметры.
+
+### Безопасные паттерны фильтров
+- **String in repo:** передавать в репозиторий `enum.name()` как `String` и сравнивать со строковыми литералами (`'ALL'`, `'SYSTEM'`, `'MY'`).
+- **Branching in service:** делать ветвление в сервисе (`ALL/SYSTEM/MY`) и вызывать разные методы репозитория без enum-параметра.
+- **Criteria API / Specifications:** использовать для сложной динамической фильтрации и растущего числа опциональных параметров.
+
+### Null/Optional параметры
+- Для optional-параметров в JPQL ставить явную проверку `:param is null` первой в условии.
+- Избегать выражений с неочевидным типом параметра (смешение типов в `CASE/COALESCE`, сравнения с литералами другого типа без явного приведения).
+
+### Проверка перед мерджем (обязательно)
+- Для каждого нового `@Query` с фильтрами проверить: вызов без параметров, вызов со всеми параметрами, и каждую ветку `scope/enum`-логики.
+- Факт проверок фиксировать в PR summary.
+
+### Памятка по симптомам
+- При `Could not determine ValueMapping for SqmParameter(...)` сначала проверить `@Query` на enum-параметры/enum-литералы и типонечитаемые `OR/CASE`.
+- Базовое исправление: перейти на `String in repo` или `Branching in service`.
+
 ## API Conventions
 - JSON: camelCase
 - Use Bean Validation on request DTOs.

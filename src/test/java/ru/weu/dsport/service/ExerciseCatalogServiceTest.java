@@ -39,7 +39,7 @@ class ExerciseCatalogServiceTest {
                 .updatedAt(OffsetDateTime.now(ZoneOffset.UTC))
                 .build();
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(exerciseRepository.findSummaryRowsForPicker(42L, ExerciseScope.ALL, null, null)).thenReturn(List.of(
+        when(exerciseRepository.findSummaryRowsForPicker(42L, "ALL", null, null)).thenReturn(List.of(
                 new Row(1L, "Bench Press", ExerciseType.REPS_WEIGHT, "CHEST", true),
                 new Row(1L, "Bench Press", ExerciseType.REPS_WEIGHT, "ARMS", true),
                 new Row(2L, "My Pull Up", ExerciseType.REPS_WEIGHT, "BACK", false)
@@ -60,7 +60,7 @@ class ExerciseCatalogServiceTest {
         assertThat(result.get(1).getId()).isEqualTo(2L);
         assertThat(result.get(1).getScope()).isEqualTo(ExerciseSummaryResponse.ExerciseOwnerScope.MY);
 
-        verify(exerciseRepository).findSummaryRowsForPicker(42L, ExerciseScope.ALL, null, null);
+        verify(exerciseRepository).findSummaryRowsForPicker(42L, "ALL", null, null);
     }
 
     @Test
@@ -72,7 +72,7 @@ class ExerciseCatalogServiceTest {
                 .updatedAt(OffsetDateTime.now(ZoneOffset.UTC))
                 .build();
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(exerciseRepository.findSummaryRowsForPicker(7L, ExerciseScope.MY, "press", "CHEST"))
+        when(exerciseRepository.findSummaryRowsForPicker(7L, "MY", "press", "CHEST"))
                 .thenReturn(List.of());
 
         ExerciseCatalogService service = new ExerciseCatalogService(
@@ -82,7 +82,30 @@ class ExerciseCatalogServiceTest {
         );
         service.listExercises(ExerciseScope.MY, "  press ", " CHEST ");
 
-        verify(exerciseRepository).findSummaryRowsForPicker(7L, ExerciseScope.MY, "press", "CHEST");
+        verify(exerciseRepository).findSummaryRowsForPicker(7L, "MY", "press", "CHEST");
+    }
+
+    @Test
+    void listExercisesPassesSystemScopeAsString() {
+        AppUser currentUser = AppUser.builder()
+                .id(10L)
+                .tgUserId(100L)
+                .createdAt(OffsetDateTime.now(ZoneOffset.UTC))
+                .updatedAt(OffsetDateTime.now(ZoneOffset.UTC))
+                .build();
+        when(currentUserService.getCurrentUser()).thenReturn(currentUser);
+        when(exerciseRepository.findSummaryRowsForPicker(10L, "SYSTEM", null, null))
+                .thenReturn(List.of());
+
+        ExerciseCatalogService service = new ExerciseCatalogService(
+                exerciseRepository,
+                muscleGroupRepository,
+                currentUserService
+        );
+
+        service.listExercises(ExerciseScope.SYSTEM, null, null);
+
+        verify(exerciseRepository).findSummaryRowsForPicker(10L, "SYSTEM", null, null);
     }
 
     @Test

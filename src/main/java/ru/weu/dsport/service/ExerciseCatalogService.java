@@ -36,12 +36,13 @@ public class ExerciseCatalogService {
     ) {
         AppUser user = currentUserService.getCurrentUser();
         ExerciseScope effectiveScope = scope == null ? ExerciseScope.ALL : scope;
+        String scopeFilter = effectiveScope.name();
         String normalizedQuery = normalizeOptionalText(query);
         String normalizedMuscleGroup = normalizeOptionalText(muscleGroup);
 
         List<ExerciseSummaryRow> rows = exerciseRepository.findSummaryRowsForPicker(
                 user.getId(),
-                effectiveScope,
+                scopeFilter,
                 normalizedQuery,
                 normalizedMuscleGroup
         );
