@@ -72,7 +72,7 @@ class ExerciseCatalogServiceTest {
                 .updatedAt(OffsetDateTime.now(ZoneOffset.UTC))
                 .build();
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(exerciseRepository.findSummaryRowsForPicker(7L, "MY", "press", "CHEST"))
+        when(exerciseRepository.findSummaryRowsForPicker(7L, "MY", "%press%", "CHEST"))
                 .thenReturn(List.of());
 
         ExerciseCatalogService service = new ExerciseCatalogService(
@@ -80,9 +80,9 @@ class ExerciseCatalogServiceTest {
                 muscleGroupRepository,
                 currentUserService
         );
-        service.listExercises(ExerciseScope.MY, "  press ", " CHEST ");
+        service.listExercises(ExerciseScope.MY, "  PrEsS ", " CHEST ");
 
-        verify(exerciseRepository).findSummaryRowsForPicker(7L, "MY", "press", "CHEST");
+        verify(exerciseRepository).findSummaryRowsForPicker(7L, "MY", "%press%", "CHEST");
     }
 
     @Test

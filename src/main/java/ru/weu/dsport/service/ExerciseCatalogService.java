@@ -3,6 +3,7 @@ package ru.weu.dsport.service;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.weu.dsport.domain.AppUser;
@@ -37,13 +38,13 @@ public class ExerciseCatalogService {
         AppUser user = currentUserService.getCurrentUser();
         ExerciseScope effectiveScope = scope == null ? ExerciseScope.ALL : scope;
         String scopeFilter = effectiveScope.name();
-        String normalizedQuery = normalizeOptionalText(query);
+        String queryPattern = buildOptionalQueryPattern(query);
         String normalizedMuscleGroup = normalizeOptionalText(muscleGroup);
 
         List<ExerciseSummaryRow> rows = exerciseRepository.findSummaryRowsForPicker(
                 user.getId(),
                 scopeFilter,
-                normalizedQuery,
+                queryPattern,
                 normalizedMuscleGroup
         );
 
@@ -81,6 +82,14 @@ public class ExerciseCatalogService {
             return null;
         }
         return value.trim();
+    }
+
+    private String buildOptionalQueryPattern(String value) {
+        String normalizedValue = normalizeOptionalText(value);
+        if (normalizedValue == null) {
+            return null;
+        }
+        return "%" + normalizedValue.toLowerCase(Locale.ROOT) + "%";
     }
 
     private record ExerciseSummaryAccumulator(

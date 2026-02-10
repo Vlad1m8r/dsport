@@ -35,7 +35,7 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
             left join e.muscleGroups mg
             where e.deletedAt is null
               and (e.ownerUser.id = :ownerUserId or e.ownerUser is null)
-              and (:query is null or lower(e.name) like lower(concat('%', :query, '%')))
+              and (:queryPattern is null or lower(e.name) like :queryPattern)
               and (:muscleGroup is null or exists (
                    select 1
                    from e.muscleGroups mgFilter
@@ -52,7 +52,7 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
     List<ExerciseSummaryRow> findSummaryRowsForPicker(
             @Param("ownerUserId") Long ownerUserId,
             @Param("scope") String scope,
-            @Param("query") String query,
+            @Param("queryPattern") String queryPattern,
             @Param("muscleGroup") String muscleGroup
     );
 }
