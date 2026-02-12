@@ -24,4 +24,7 @@ public class ApiError {
 
     @Schema(description = "Дополнительные детали", nullable = true)
     private final Object details;
+
+    @Schema(description = "Дополнительные данные ошибки", nullable = true)
+    private final Object data;
 }

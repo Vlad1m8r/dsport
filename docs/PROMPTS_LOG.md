@@ -12,3 +12,11 @@
 - API/Repository safety: в запросе exercise picker enum-параметр `scope` в JPQL заменён на `String`
   (`ALL`/`SYSTEM`/`MY`) и сравнения со строковыми литералами для устойчивости Hibernate 6.x
   (предотвращение `Could not determine ValueMapping for SqmParameter(...)`).
+- Workout business rule: одновременно только одна активная тренировка на пользователя.
+  - GET `/api/workouts` получил фильтр `status=ALL|FINISHED|IN_PROGRESS` (default `ALL`) + прежние `limit/offset`.
+  - POST `/api/workouts/start` при наличии активной тренировки возвращает `409 WORKOUT_ALREADY_IN_PROGRESS`
+    и `ApiError.data.currentWorkoutId`.
+  - OpenAPI аннотации обновлены: `status` для списка тренировок и `409` для старта.
+  - Примеры:
+    - `GET /api/workouts?status=IN_PROGRESS` -> `[]` или `[ { ... "finishedAt": null ... } ]`
+    - `POST /api/workouts/start` -> `409 { "code":"WORKOUT_ALREADY_IN_PROGRESS", "data": { "currentWorkoutId": 55 } }`

@@ -26,6 +26,7 @@ public class GlobalExceptionHandler {
                 .code("UNAUTHORIZED")
                 .message(ex.getMessage())
                 .details(null)
+                .data(null)
                 .build();
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
@@ -41,6 +42,7 @@ public class GlobalExceptionHandler {
                 .code("NOT_FOUND")
                 .message(ex.getMessage())
                 .details(null)
+                .data(null)
                 .build();
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
@@ -57,8 +59,26 @@ public class GlobalExceptionHandler {
                 .code(code)
                 .message(ex.getMessage())
                 .details(null)
+                .data(null)
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiError> handleConflict(
+            ConflictException ex,
+            HttpServletRequest request
+    ) {
+        String code = ex.getCode() == null ? "CONFLICT" : ex.getCode();
+        ApiError response = ApiError.builder()
+                .timestamp(OffsetDateTime.now(ZoneOffset.UTC))
+                .path(request.getRequestURI())
+                .code(code)
+                .message(ex.getMessage())
+                .details(null)
+                .data(ex.getData())
+                .build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -76,6 +96,7 @@ public class GlobalExceptionHandler {
                 .code("VALIDATION_ERROR")
                 .message("Validation failed")
                 .details(details)
+                .data(null)
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
