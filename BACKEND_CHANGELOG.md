@@ -17,3 +17,11 @@
 - Проверка: ./mvnw test.
 - B12 — workout response includes exerciseName/type в `WorkoutSessionResponse.WorkoutExerciseResponse`; добавлены OpenAPI-описания полей и уточнена релевантность полей подхода для TIME vs REPS_WEIGHT.
 
+- Workout API: GET `/api/workouts` расширен параметром `status` (`ALL` по умолчанию, `FINISHED`, `IN_PROGRESS`) с фильтрацией по `finished_at`, сортировкой `startedAt desc`, и прежней пагинацией `limit/offset` только в рамках текущего пользователя.
+- Workout API: POST `/api/workouts/start` теперь проверяет активную тренировку пользователя (`finished_at is null`) и возвращает `409 CONFLICT` с `ApiError.code=WORKOUT_ALREADY_IN_PROGRESS` и `ApiError.data.currentWorkoutId`.
+- OpenAPI: для GET `/api/workouts` задокументирован query-параметр `status` с default=`ALL`, для POST `/api/workouts/start` добавлен ответ `409`.
+- Примеры:
+  - Запрос: `GET /api/workouts?status=FINISHED&limit=20&offset=0`
+  - Ответ (200): `[ { "id": 101, "title": "2026-02-12 Push", "finishedAt": "2026-02-12T10:30:00Z" } ]`
+  - Запрос: `POST /api/workouts/start`
+  - Ответ (409): `{ "code": "WORKOUT_ALREADY_IN_PROGRESS", "data": { "currentWorkoutId": 55 } }`

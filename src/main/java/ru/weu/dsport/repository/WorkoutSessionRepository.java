@@ -24,6 +24,27 @@ public interface WorkoutSessionRepository extends JpaRepository<WorkoutSession, 
             """)
     List<WorkoutSession> findByUserId(Long userId, Pageable pageable);
 
+
+    @Query("""
+            select workoutSession
+            from WorkoutSession workoutSession
+            where workoutSession.user.id = :userId
+              and workoutSession.finishedAt is null
+            order by workoutSession.startedAt desc, workoutSession.id desc
+            """)
+    List<WorkoutSession> findInProgressByUserId(Long userId, Pageable pageable);
+
+    @Query("""
+            select workoutSession
+            from WorkoutSession workoutSession
+            where workoutSession.user.id = :userId
+              and workoutSession.finishedAt is not null
+            order by workoutSession.startedAt desc, workoutSession.id desc
+            """)
+    List<WorkoutSession> findFinishedByUserId(Long userId, Pageable pageable);
+
+    Optional<WorkoutSession> findFirstByUserIdAndFinishedAtIsNullOrderByStartedAtDescIdDesc(Long userId);
+
     @Query(value = """
             select ws.id as lastWorkoutId,
                    ws.started_at as lastWorkoutStartedAt,

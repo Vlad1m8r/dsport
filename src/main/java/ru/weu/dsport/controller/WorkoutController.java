@@ -25,6 +25,7 @@ import ru.weu.dsport.dto.AddWorkoutExerciseRequest;
 import ru.weu.dsport.dto.StartWorkoutRequest;
 import ru.weu.dsport.dto.UpdateSetEntryRequest;
 import ru.weu.dsport.dto.WorkoutSessionResponse;
+import ru.weu.dsport.dto.WorkoutStatusFilter;
 import ru.weu.dsport.dto.WorkoutSummaryResponse;
 import ru.weu.dsport.exception.ApiError;
 import ru.weu.dsport.service.WorkoutService;
@@ -44,12 +45,14 @@ public class WorkoutController {
                             schema = @Schema(implementation = WorkoutSummaryResponse.class))))
     })
     public List<WorkoutSummaryResponse> listWorkouts(
+            @Parameter(description = "Статус тренировки", example = "ALL", schema = @Schema(defaultValue = "ALL"))
+            @RequestParam(required = false, defaultValue = "ALL") WorkoutStatusFilter status,
             @Parameter(description = "Лимит записей", example = "20")
             @RequestParam(required = false) Integer limit,
             @Parameter(description = "Смещение", example = "0")
             @RequestParam(required = false) Integer offset
     ) {
-        return workoutService.listWorkouts(limit, offset);
+        return workoutService.listWorkouts(status, limit, offset);
     }
 
     @GetMapping("/{workoutId}")
@@ -70,6 +73,8 @@ public class WorkoutController {
             @ApiResponse(responseCode = "200", description = "Тренировка создана",
                     content = @Content(schema = @Schema(implementation = WorkoutSessionResponse.class))),
             @ApiResponse(responseCode = "400", description = "Ошибка валидации",
+                    content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "409", description = "У пользователя уже есть активная тренировка",
                     content = @Content(schema = @Schema(implementation = ApiError.class))),
             @ApiResponse(responseCode = "404", description = "Шаблон не найден",
                     content = @Content(schema = @Schema(implementation = ApiError.class)))

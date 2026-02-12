@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -21,8 +22,10 @@ import ru.weu.dsport.dto.AddWorkoutExerciseRequest;
 import ru.weu.dsport.dto.StartWorkoutRequest;
 import ru.weu.dsport.dto.UpdateSetEntryRequest;
 import ru.weu.dsport.dto.WorkoutSessionResponse;
+import ru.weu.dsport.dto.WorkoutStatusFilter;
 import ru.weu.dsport.dto.WorkoutSummaryResponse;
 import ru.weu.dsport.exception.BadRequestException;
+import ru.weu.dsport.exception.ConflictException;
 import ru.weu.dsport.exception.NotFoundException;
 import ru.weu.dsport.mapper.WorkoutMapper;
 import ru.weu.dsport.repository.ExerciseRepository;
@@ -40,6 +43,7 @@ public class WorkoutService {
     private static final int MIN_LIMIT = 1;
     private static final String WORKOUT_FINISHED_CODE = "WORKOUT_FINISHED";
     private static final String WORKOUT_HAS_EMPTY_SETS_CODE = "WORKOUT_HAS_EMPTY_SETS";
+    private static final String WORKOUT_ALREADY_IN_PROGRESS_CODE = "WORKOUT_ALREADY_IN_PROGRESS";
 
     private final WorkoutTemplateRepository workoutTemplateRepository;
     private final WorkoutSessionRepository workoutSessionRepository;
@@ -52,6 +56,16 @@ public class WorkoutService {
     @Transactional
     public WorkoutSessionResponse startWorkout(StartWorkoutRequest request) {
         AppUser user = currentUserService.getCurrentUser();
+        WorkoutSession inProgressWorkout = workoutSessionRepository
+                .findFirstByUserIdAndFinishedAtIsNullOrderByStartedAtDescIdDesc(user.getId())
+                .orElse(null);
+        if (inProgressWorkout != null) {
+            throw new ConflictException(
+                    "У пользователя уже есть активная тренировка",
+                    WORKOUT_ALREADY_IN_PROGRESS_CODE,
+                    Map.of("currentWorkoutId", inProgressWorkout.getId())
+            );
+        }
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         WorkoutTemplate template = null;
         String title = request.getTitle();
@@ -98,7 +112,7 @@ public class WorkoutService {
     }
 
     @Transactional
-    public List<WorkoutSummaryResponse> listWorkouts(Integer limit, Integer offset) {
+    public List<WorkoutSummaryResponse> listWorkouts(WorkoutStatusFilter status, Integer limit, Integer offset) {
         int resolvedLimit = limit == null ? DEFAULT_LIMIT : limit;
         int resolvedOffset = offset == null ? 0 : offset;
         if (resolvedLimit < MIN_LIMIT) {
@@ -108,9 +122,15 @@ public class WorkoutService {
             throw new BadRequestException("offset должен быть >= 0");
         }
         AppUser user = currentUserService.getCurrentUser();
+        WorkoutStatusFilter resolvedStatus = status == null ? WorkoutStatusFilter.ALL : status;
         Sort sort = Sort.by(Sort.Order.desc("startedAt"), Sort.Order.desc("id"));
         OffsetBasedPageRequest pageRequest = new OffsetBasedPageRequest(resolvedOffset, resolvedLimit, sort);
-        return workoutSessionRepository.findByUserId(user.getId(), pageRequest).stream()
+        List<WorkoutSession> sessions = switch (resolvedStatus) {
+            case FINISHED -> workoutSessionRepository.findFinishedByUserId(user.getId(), pageRequest);
+            case IN_PROGRESS -> workoutSessionRepository.findInProgressByUserId(user.getId(), pageRequest);
+            case ALL -> workoutSessionRepository.findByUserId(user.getId(), pageRequest);
+        };
+        return sessions.stream()
                 .map(workoutMapper::toSummaryResponse)
                 .toList();
     }
