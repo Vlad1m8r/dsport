@@ -91,6 +91,56 @@ These guidelines apply to the entire repository unless a nested `AGENTS.md` over
 - Use SLF4J (log.info/debug/warn/error).
 - Do not log secrets/tokens or personal data.
 
+## Telegram Mini Apps auth (initData validation)
+Источник истины для авторизации Mini App — официальная документация Telegram:
+- https://core.telegram.org/bots/webapps (включая секцию **Validating data received via the Mini App**)
+- https://core.telegram.org/api/bots/webapps (события/WebView, справочно)
+- https://core.telegram.org/api (термины и разграничение Bot API vs Telegram API/MTProto, справочно)
+
+### Источник аутентификации
+- Backend получает `initData` как **raw query string** из заголовка `X-Tg-Init-Data`.
+- Мы не доверяем `initDataUnsafe` и в целом никаким данным клиента без серверной криптографической проверки.
+- Аутентификация пользователя в Mini App основана на проверке целостности `initData` по алгоритму Telegram.
+
+### Алгоритм валидации initData (обязательно)
+1. Распарсить `initData` как query string и извлечь `hash`.
+2. Собрать `data-check-string`: пары `key=value`, отсортированные по ключу, разделённые символом `\n`, поле `hash` исключить.
+3. Вычислить `secret_key = HMAC_SHA256(bot_token, "WebAppData")`.
+4. Вычислить `expected_hash = hex(HMAC_SHA256(data-check-string, secret_key))`.
+5. Сравнить `expected_hash` и `received hash` в постоянное время (constant-time compare).
+6. Проверить `auth_date`: отклонять слишком старые данные (TTL задаётся конфигурацией backend).
+
+### Edge cases и запреты
+- Пустой/отсутствующий `X-Tg-Init-Data` для не-OPTIONS запросов -> ошибка авторизации.
+- Отсутствующий `hash`, невалидный формат query string или некорректный URL-decoding -> `400 Bad Request`.
+- Невалидная подпись (`hash` не совпал) -> `401 Unauthorized` или `403 Forbidden` по принятому security-контракту.
+- Просроченный `auth_date` -> отдельная ошибка (например, `401` с кодом `AUTH_DATE_EXPIRED`).
+- Запрещено "упрощать" проверку: нельзя доверять только `user.id`/`query_id`/другим полям без проверки подписи.
+- Запрещено использовать значения из `initData` в бизнес-логике до успешной валидации.
+
+### CORS / OPTIONS
+- CORS preflight (`OPTIONS`) может приходить без `X-Tg-Init-Data`, это нормальное поведение браузера.
+- Backend обязан пропускать `OPTIONS` без авторизации и без попытки валидации `initData`.
+- Все реальные запросы (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`) должны требовать валидный `initData`.
+
+### Практические правила разработки
+- Любые изменения заголовков, схемы авторизации и статусов ошибок фиксировать в `docs/` и/или `AGENTS.md` как контракт.
+- Логи: не логировать `initData` целиком; при диагностике маскировать чувствительные части (`hash`, `user`, `auth_date`, etc.).
+- Обработка ошибок должна быть консистентной:
+  - `400` — невалидный формат/обязательные поля отсутствуют,
+  - `401/403` — подпись невалидна,
+  - отдельный код ошибки для `auth_date expired`.
+
+### Scope: что НЕ делаем
+- Для backend Mini App не реализуем MTProto-клиент и не используем `core.telegram.org/mtproto`.
+- Для этого проекта релевантны Bot API и серверная валидация `initData`, а не Telegram API/MTProto авторизация.
+
+## Security checklist
+- [ ] `OPTIONS` разрешён без `X-Tg-Init-Data` и без auth-проверки.
+- [ ] `initData` валидируется строго по алгоритму Telegram (data-check-string + HMAC).
+- [ ] Проверяется свежесть `auth_date` (TTL/expiration).
+- [ ] `initData` не логируется целиком (используется маскирование).
+
 ## Контекст продукта
 - Описание MVP и юзер флоу: см. `PRODUCT.md` в корне репозитория.
 - Описание проекта см. пакет `docs` в корне репозитория
