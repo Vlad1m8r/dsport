@@ -143,6 +143,18 @@ These guidelines apply to the entire repository unless a nested `AGENTS.md` over
 - Для backend Mini App не реализуем MTProto-клиент и не используем `core.telegram.org/mtproto`.
 - Для этого проекта релевантны Bot API и серверная валидация `initData`, а не Telegram API/MTProto авторизация.
 
+### Telegram Mini Apps Documentation
+
+- Официальные правила и архитектурные договорённости по Mini App находятся в `docs/telegram.md`.
+- Этот файл является источником правды для:
+  - initData / безопасности
+  - Safe Area / Layout
+  - ThemeParams и палитры
+  - viewport events
+  - ограничений Bot API / MTProto
+- При любом изменении Telegram-поведения (auth, layout, theme, WebApp API, safe area и т.д.)
+  необходимо обновить `docs/telegram.md`.
+
 ## Security checklist
 - [ ] `OPTIONS` разрешён без `X-Tg-Init-Data` и без auth-проверки.
 - [ ] `initData` валидируется строго по алгоритму Telegram (data-check-string + HMAC).
@@ -150,6 +162,7 @@ These guidelines apply to the entire repository unless a nested `AGENTS.md` over
 - [ ] `initData` не логируется целиком (используется маскирование).
 - [ ] Сравнение HMAC/`hash` выполняется в constant-time.
 - [ ] Parsing/decoding соответствует `application/x-www-form-urlencoded`, `data-check-string` собирается из decoded key/value.
+- [ ] Если изменения касаются Telegram Mini Apps (auth, safe area, theme, layout, WebApp API), обновлён `docs/telegram.md`
 
 ## Контекст продукта
 - Описание MVP и юзер флоу: см. `PRODUCT.md` в корне репозитория.
