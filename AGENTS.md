@@ -106,9 +106,16 @@ These guidelines apply to the entire repository unless a nested `AGENTS.md` over
 1. Распарсить `initData` как query string и извлечь `hash`.
 2. Собрать `data-check-string`: пары `key=value`, отсортированные по ключу, разделённые символом `\n`, поле `hash` исключить.
 3. Вычислить `secret_key = HMAC_SHA256(bot_token, "WebAppData")`.
+   Явный формат аргументов: `HMAC_SHA256(key=bot_token, data="WebAppData")`.
 4. Вычислить `expected_hash = hex(HMAC_SHA256(data-check-string, secret_key))`.
+   Явный формат аргументов: `HMAC_SHA256(key=secret_key, data=data-check-string)`.
 5. Сравнить `expected_hash` и `received hash` в постоянное время (constant-time compare).
 6. Проверить `auth_date`: отклонять слишком старые данные (TTL задаётся конфигурацией backend).
+
+### Parsing / decoding rules
+- `initData` парсить как query string формата `application/x-www-form-urlencoded`.
+- Использовать корректный URL-decoding для значений и ключей, включая обработку `+` как пробела.
+- `data-check-string` собирать только из нормализованных decoded `key=value` пар (без `hash`), с сортировкой по ключу.
 
 ### Edge cases и запреты
 - Пустой/отсутствующий `X-Tg-Init-Data` для не-OPTIONS запросов -> ошибка авторизации.
@@ -126,10 +133,11 @@ These guidelines apply to the entire repository unless a nested `AGENTS.md` over
 ### Практические правила разработки
 - Любые изменения заголовков, схемы авторизации и статусов ошибок фиксировать в `docs/` и/или `AGENTS.md` как контракт.
 - Логи: не логировать `initData` целиком; при диагностике маскировать чувствительные части (`hash`, `user`, `auth_date`, etc.).
+- Нельзя логировать поле `user` целиком (JSON); при необходимости допускается только `user.id`, без `hash` и `auth_date` в той же записи.
 - Обработка ошибок должна быть консистентной:
-  - `400` — невалидный формат/обязательные поля отсутствуют,
-  - `401/403` — подпись невалидна,
-  - отдельный код ошибки для `auth_date expired`.
+  - `400` — невалидный формат `initData` (`hash` отсутствует, decoding error, невалидный query string и т.д.),
+  - `401` — `initData` отсутствует или `auth_date` истёк,
+  - `403` — подпись невалидна (`hash mismatch`).
 
 ### Scope: что НЕ делаем
 - Для backend Mini App не реализуем MTProto-клиент и не используем `core.telegram.org/mtproto`.
@@ -140,6 +148,8 @@ These guidelines apply to the entire repository unless a nested `AGENTS.md` over
 - [ ] `initData` валидируется строго по алгоритму Telegram (data-check-string + HMAC).
 - [ ] Проверяется свежесть `auth_date` (TTL/expiration).
 - [ ] `initData` не логируется целиком (используется маскирование).
+- [ ] Сравнение HMAC/`hash` выполняется в constant-time.
+- [ ] Parsing/decoding соответствует `application/x-www-form-urlencoded`, `data-check-string` собирается из decoded key/value.
 
 ## Контекст продукта
 - Описание MVP и юзер флоу: см. `PRODUCT.md` в корне репозитория.
