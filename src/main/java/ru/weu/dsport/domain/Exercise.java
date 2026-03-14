@@ -1,5 +1,6 @@
 package ru.weu.dsport.domain;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,9 +13,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -41,9 +46,6 @@ public class Exercise {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(name = "name", nullable = false)
-    private String name;
-
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "type", nullable = false)
@@ -55,6 +57,15 @@ public class Exercise {
 
     @Column(name = "deleted_at")
     private OffsetDateTime deletedAt;
+
+    @Column(name = "preview_gif_url")
+    private String previewGifUrl;
+
+    @Column(name = "preview_image_url")
+    private String previewImageUrl;
+
+    @Column(name = "video_url")
+    private String videoUrl;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
@@ -70,4 +81,13 @@ public class Exercise {
             inverseJoinColumns = @JoinColumn(name = "muscle_code")
     )
     private Set<MuscleGroup> muscleGroups = new HashSet<>();
+
+    @Builder.Default
+    @OneToMany(
+            mappedBy = "exercise",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("id ASC")
+    private List<ExerciseTranslation> translations = new ArrayList<>();
 }

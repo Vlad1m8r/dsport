@@ -4,6 +4,8 @@ import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +54,7 @@ public class WorkoutService {
     private final WorkoutMapper workoutMapper;
     private final SetEntryRepository setEntryRepository;
     private final WorkoutExerciseRepository workoutExerciseRepository;
+    private final ExerciseLocalizationService exerciseLocalizationService;
 
     @Transactional
     public WorkoutSessionResponse startWorkout(StartWorkoutRequest request) {
@@ -61,7 +64,7 @@ public class WorkoutService {
                 .orElse(null);
         if (inProgressWorkout != null) {
             throw new ConflictException(
-                    "У пользователя уже есть активная тренировка",
+                    "РЈ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ СѓР¶Рµ РµСЃС‚СЊ Р°РєС‚РёРІРЅР°СЏ С‚СЂРµРЅРёСЂРѕРІРєР°",
                     WORKOUT_ALREADY_IN_PROGRESS_CODE,
                     Map.of("currentWorkoutId", inProgressWorkout.getId())
             );
@@ -108,7 +111,7 @@ public class WorkoutService {
             }
         }
         WorkoutSession savedSession = workoutSessionRepository.saveAndFlush(session);
-        return workoutMapper.toResponse(savedSession);
+        return toLocalizedWorkoutResponse(savedSession, user);
     }
 
     @Transactional
@@ -116,10 +119,10 @@ public class WorkoutService {
         int resolvedLimit = limit == null ? DEFAULT_LIMIT : limit;
         int resolvedOffset = offset == null ? 0 : offset;
         if (resolvedLimit < MIN_LIMIT) {
-            throw new BadRequestException("limit должен быть >= 1");
+            throw new BadRequestException("limit РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ >= 1");
         }
         if (resolvedOffset < 0) {
-            throw new BadRequestException("offset должен быть >= 0");
+            throw new BadRequestException("offset РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ >= 0");
         }
         AppUser user = currentUserService.getCurrentUser();
         WorkoutStatusFilter resolvedStatus = status == null ? WorkoutStatusFilter.ALL : status;
@@ -139,7 +142,7 @@ public class WorkoutService {
     public WorkoutSessionResponse getWorkout(Long workoutId) {
         AppUser user = currentUserService.getCurrentUser();
         WorkoutSession session = getWorkoutSession(workoutId, user.getId());
-        return workoutMapper.toResponse(session);
+        return toLocalizedWorkoutResponse(session, user);
     }
 
     @Transactional
@@ -164,7 +167,10 @@ public class WorkoutService {
                 .build();
         session.getExercises().add(workoutExercise);
         WorkoutExercise savedExercise = workoutExerciseRepository.saveAndFlush(workoutExercise);
-        return workoutMapper.toExerciseResponse(savedExercise);
+        return workoutMapper.toExerciseResponse(
+                savedExercise,
+                resolveExerciseNameMap(List.of(savedExercise.getExercise()), user.getLanguageCode())
+        );
     }
 
     @Transactional
@@ -241,12 +247,12 @@ public class WorkoutService {
                 ? request.getDurationSeconds()
                 : setEntry.getDurationSeconds();
         if (updatedReps == null && updatedDuration == null) {
-            throw new BadRequestException("reps или durationSeconds должны быть заданы");
+            throw new BadRequestException("reps РёР»Рё durationSeconds РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ Р·Р°РґР°РЅС‹");
         }
         if (request.isOrderIndexProvided()) {
             Integer orderIndex = request.getOrderIndex();
             if (orderIndex == null) {
-                throw new BadRequestException("orderIndex должен быть >= 1");
+                throw new BadRequestException("orderIndex РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ >= 1");
             }
             setEntry.setOrderIndex(orderIndex);
         }
@@ -268,14 +274,14 @@ public class WorkoutService {
         AppUser user = currentUserService.getCurrentUser();
         WorkoutSession session = getWorkoutSession(workoutId, user.getId());
         if (session.getFinishedAt() != null) {
-            return workoutMapper.toResponse(session);
+            return toLocalizedWorkoutResponse(session, user);
         }
         boolean hasEmptySets = session.getExercises().stream()
                 .flatMap(exercise -> exercise.getSetEntries().stream())
                 .anyMatch(this::isEmptySetEntry);
         if (hasEmptySets) {
             throw new BadRequestException(
-                    "Тренировка содержит пустые подходы",
+                    "РўСЂРµРЅРёСЂРѕРІРєР° СЃРѕРґРµСЂР¶РёС‚ РїСѓСЃС‚С‹Рµ РїРѕРґС…РѕРґС‹",
                     WORKOUT_HAS_EMPTY_SETS_CODE
             );
         }
@@ -283,7 +289,26 @@ public class WorkoutService {
         session.setFinishedAt(now);
         session.setUpdatedAt(now);
         workoutSessionRepository.save(session);
-        return workoutMapper.toResponse(session);
+        return toLocalizedWorkoutResponse(session, user);
+    }
+
+    private WorkoutSessionResponse toLocalizedWorkoutResponse(WorkoutSession session, AppUser user) {
+        return workoutMapper.toResponse(
+                session,
+                resolveExerciseNameMap(
+                        session.getExercises().stream()
+                                .map(WorkoutExercise::getExercise)
+                                .toList(),
+                        user.getLanguageCode()
+                )
+        );
+    }
+
+    private Map<Long, String> resolveExerciseNameMap(Collection<Exercise> exercises, String languageCode) {
+        Map<Long, String> names = new LinkedHashMap<>();
+        exerciseLocalizationService.resolveExerciseTranslations(exercises, languageCode)
+                .forEach((exerciseId, translation) -> names.put(exerciseId, translation.name()));
+        return names;
     }
 
     private String formatTitle(OffsetDateTime now, String templateName) {
@@ -314,7 +339,7 @@ public class WorkoutService {
 
     private void assertWorkoutNotFinished(WorkoutSession session) {
         if (session.getFinishedAt() != null) {
-            throw new BadRequestException("Тренировка завершена", WORKOUT_FINISHED_CODE);
+            throw new BadRequestException("РўСЂРµРЅРёСЂРѕРІРєР° Р·Р°РІРµСЂС€РµРЅР°", WORKOUT_FINISHED_CODE);
         }
     }
 

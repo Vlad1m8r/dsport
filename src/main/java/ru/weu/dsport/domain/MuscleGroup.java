@@ -1,9 +1,14 @@
 package ru.weu.dsport.domain;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,6 +32,12 @@ public class MuscleGroup {
     @EqualsAndHashCode.Include
     private String code;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Builder.Default
+    @OneToMany(
+            mappedBy = "muscleGroup",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("id ASC")
+    private List<MuscleGroupTranslation> translations = new ArrayList<>();
 }
