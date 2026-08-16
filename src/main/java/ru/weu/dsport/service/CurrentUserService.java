@@ -12,6 +12,8 @@ import ru.weu.dsport.repository.AppUserRepository;
 @RequiredArgsConstructor
 public class CurrentUserService {
 
+    private static final String DEFAULT_LANGUAGE_CODE = "en";
+
     private final AppUserRepository appUserRepository;
 
     public AppUser getOrCreateCurrentUser(long tgUserId) {
@@ -20,6 +22,7 @@ public class CurrentUserService {
                     OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
                     AppUser user = AppUser.builder()
                             .tgUserId(tgUserId)
+                            .languageCode(DEFAULT_LANGUAGE_CODE)
                             .createdAt(now)
                             .updatedAt(now)
                             .build();

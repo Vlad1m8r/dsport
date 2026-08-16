@@ -13,20 +13,29 @@ import ru.weu.dsport.domain.ExerciseType;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Краткая карточка упражнения для picker")
+@Schema(description = "Краткая локализованная карточка упражнения для picker")
 public class ExerciseSummaryResponse {
 
     @Schema(description = "Идентификатор упражнения", example = "1")
     private Long id;
 
-    @Schema(description = "Название упражнения", example = "Bench Press")
+    @Schema(description = "Локализованное название упражнения", example = "Bench Press")
     private String name;
 
     @Schema(description = "Тип упражнения", example = "REPS_WEIGHT")
     private ExerciseType type;
 
-    @ArraySchema(schema = @Schema(description = "Код группы мышц", example = "CHEST"))
-    private List<String> muscleGroups;
+    @Schema(description = "URL GIF-превью. Приоритетнее image preview", nullable = true)
+    private String previewGifUrl;
+
+    @Schema(description = "URL image-превью, если GIF отсутствует", nullable = true)
+    private String previewImageUrl;
+
+    @Schema(description = "URL видео упражнения", nullable = true)
+    private String videoUrl;
+
+    @ArraySchema(schema = @Schema(implementation = MuscleGroupCodeResponse.class))
+    private List<MuscleGroupCodeResponse> muscleGroups;
 
     @Schema(description = "Источник упражнения", example = "SYSTEM")
     private ExerciseOwnerScope scope;

@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import ru.weu.dsport.domain.Exercise;
 import ru.weu.dsport.domain.ExerciseType;
@@ -19,10 +20,9 @@ class WorkoutMapperTest {
     private final WorkoutMapper mapper = new WorkoutMapper();
 
     @Test
-    void toExerciseResponseIncludesExerciseNameAndType() {
+    void toExerciseResponseIncludesLocalizedExerciseNameAndType() {
         Exercise exerciseCatalogItem = Exercise.builder()
                 .id(5L)
-                .name("Планка")
                 .type(ExerciseType.TIME)
                 .build();
         SetEntry setEntry = SetEntry.builder()
@@ -45,7 +45,7 @@ class WorkoutMapperTest {
                 .exercises(List.of(workoutExercise))
                 .build();
 
-        WorkoutSessionResponse response = mapper.toResponse(session);
+        WorkoutSessionResponse response = mapper.toResponse(session, Map.of(5L, "Планка"));
 
         assertThat(response.getExercises()).hasSize(1);
         WorkoutSessionResponse.WorkoutExerciseResponse mappedExercise = response.getExercises().getFirst();

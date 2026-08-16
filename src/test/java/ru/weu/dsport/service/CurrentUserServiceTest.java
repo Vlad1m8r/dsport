@@ -36,6 +36,7 @@ class CurrentUserServiceTest {
         AppUser existing = AppUser.builder()
                 .id(10L)
                 .tgUserId(100L)
+                .languageCode("ru")
                 .createdAt(OffsetDateTime.now(ZoneOffset.UTC))
                 .updatedAt(OffsetDateTime.now(ZoneOffset.UTC))
                 .build();
@@ -56,6 +57,7 @@ class CurrentUserServiceTest {
             return AppUser.builder()
                     .id(20L)
                     .tgUserId(user.getTgUserId())
+                    .languageCode(user.getLanguageCode())
                     .createdAt(user.getCreatedAt())
                     .updatedAt(user.getUpdatedAt())
                     .build();
@@ -69,6 +71,7 @@ class CurrentUserServiceTest {
         verify(appUserRepository).save(captor.capture());
         AppUser saved = captor.getValue();
         assertThat(saved.getTgUserId()).isEqualTo(200L);
+        assertThat(saved.getLanguageCode()).isEqualTo("en");
         assertThat(saved.getCreatedAt()).isNotNull();
         assertThat(saved.getUpdatedAt()).isNotNull();
     }
@@ -87,6 +90,7 @@ class CurrentUserServiceTest {
         AppUser existing = AppUser.builder()
                 .id(30L)
                 .tgUserId(300L)
+                .languageCode("tr")
                 .createdAt(OffsetDateTime.now(ZoneOffset.UTC))
                 .updatedAt(OffsetDateTime.now(ZoneOffset.UTC))
                 .build();

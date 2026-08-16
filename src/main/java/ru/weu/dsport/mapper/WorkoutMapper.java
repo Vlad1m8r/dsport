@@ -1,8 +1,10 @@
 package ru.weu.dsport.mapper;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
+import ru.weu.dsport.domain.Exercise;
 import ru.weu.dsport.domain.SetEntry;
 import ru.weu.dsport.domain.WorkoutExercise;
 import ru.weu.dsport.domain.WorkoutSession;
@@ -13,8 +15,12 @@ import ru.weu.dsport.dto.WorkoutSummaryResponse;
 public class WorkoutMapper {
 
     public WorkoutSessionResponse toResponse(WorkoutSession session) {
+        return toResponse(session, Map.of());
+    }
+
+    public WorkoutSessionResponse toResponse(WorkoutSession session, Map<Long, String> exerciseNames) {
         List<WorkoutSessionResponse.WorkoutExerciseResponse> exercises = session.getExercises().stream()
-                .map(this::toExerciseResponse)
+                .map(exercise -> toExerciseResponse(exercise, exerciseNames))
                 .collect(Collectors.toList());
         Long templateId = session.getTemplate() == null ? null : session.getTemplate().getId();
         return WorkoutSessionResponse.builder()
@@ -39,13 +45,20 @@ public class WorkoutMapper {
     }
 
     public WorkoutSessionResponse.WorkoutExerciseResponse toExerciseResponse(WorkoutExercise exercise) {
+        return toExerciseResponse(exercise, Map.of());
+    }
+
+    public WorkoutSessionResponse.WorkoutExerciseResponse toExerciseResponse(
+            WorkoutExercise exercise,
+            Map<Long, String> exerciseNames
+    ) {
         List<WorkoutSessionResponse.SetEntryResponse> sets = exercise.getSetEntries().stream()
                 .map(this::toSetResponse)
                 .collect(Collectors.toList());
         return WorkoutSessionResponse.WorkoutExerciseResponse.builder()
                 .id(exercise.getId())
                 .exerciseId(exercise.getExercise().getId())
-                .exerciseName(exercise.getExercise().getName())
+                .exerciseName(resolveExerciseName(exercise.getExercise(), exerciseNames))
                 .exerciseType(exercise.getExercise().getType())
                 .orderIndex(exercise.getOrderIndex())
                 .sets(sets)
@@ -60,5 +73,9 @@ public class WorkoutMapper {
                 .weight(setEntry.getWeight())
                 .durationSeconds(setEntry.getDurationSeconds())
                 .build();
+    }
+
+    private String resolveExerciseName(Exercise exercise, Map<Long, String> exerciseNames) {
+        return exerciseNames.getOrDefault(exercise.getId(), "Exercise #" + exercise.getId());
     }
 }

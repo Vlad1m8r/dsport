@@ -10,9 +10,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Код группы мышц")
+@Schema(description = "Локализованная группа мышц")
 public class MuscleGroupCodeResponse {
 
-    @Schema(description = "Код группы мышц", example = "CHEST")
+    @Schema(description = "Стабильный код группы мышц", example = "CHEST")
     private String code;
+
+    @Schema(description = "Локализованное название группы мышц", example = "Chest")
+    private String name;
 }
